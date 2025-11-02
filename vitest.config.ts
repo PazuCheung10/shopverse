@@ -13,6 +13,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
+    // Default to watch mode in dev, use --run for CI/single run
   },
   resolve: {
     alias: {

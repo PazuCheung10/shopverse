@@ -187,7 +187,7 @@ export default function AddressForm({
 
       {/* Hidden submit button - validation exposed via isValid */}
       <button type="submit" className="hidden" aria-hidden="true" />
-      <input type="hidden" value={isValid ? 'valid' : 'invalid'} data-form-valid={isValid} />
+      <input type="hidden" value={isValid ? 'valid' : 'invalid'} data-form-valid={isValid} data-testid="form-validity" />
     </form>
   );
 }
