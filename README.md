@@ -4,7 +4,7 @@ Minimal, modern e-commerce demo from product list → cart → Stripe Checkout �
 
 ![Demo Flow](demo.gif)
 
-> **Note**: Add a 30-second GIF demonstrating the complete flow: browsing catalog → adding items to cart → filling checkout form → completing Stripe payment → viewing receipt page.
+*30-second demo: Catalog → Cart → Checkout → Receipt.*
 
 ## Setup
 
@@ -25,6 +25,17 @@ pnpm install
      - `STRIPE_WEBHOOK_SECRET`
      - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
    - **Optional**: Enable promo codes by setting `NEXT_PUBLIC_ENABLE_PROMO_CODES=true`
+
+#### Environment Variables at a Glance
+
+| Name | Required | Where Used | Notes |
+|---|---|---|---|
+| `DATABASE_URL` | ✅ | Prisma | Postgres connection string |
+| `STRIPE_SECRET_KEY` | ✅ | Server | Starts with `sk_test_`/`sk_live_` |
+| `STRIPE_WEBHOOK_SECRET` | ✅ | Server webhook | From Stripe CLI/Webhooks (`whsec_…`) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | ✅ | Client | `pk_test_…`/`pk_live_…` |
+| `NEXT_PUBLIC_APP_URL` | ✅ | Server | e.g. `http://localhost:3001` |
+| `NEXT_PUBLIC_ENABLE_PROMO_CODES` | Optional | Client | `"true"` to show promo UI |
 
 4. Initialize database:
 ```bash
@@ -91,6 +102,14 @@ Expect: `ready - started server on http://localhost:3001`
 
 Open [http://localhost:3001](http://localhost:3001) in your browser.
 
+## One-Minute Skim (for Reviewers)
+
+- Prices are **server-trusted**; client never sets prices
+- Orders + **OrderItems** persisted via webhook (DB-first receipts)
+- Zod + RHF for strict validation; ErrorBoundary + toasts for UX
+- Basic rate-limit on checkout (10/min) to show ops awareness
+- Deployed to Vercel; `.env` + migrations documented
+
 ## Tech Stack
 
 - Next.js 14/15 (App Router)
@@ -102,20 +121,20 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 ## Features
 
-- **Guest Checkout**: No authentication required – customers can browse and purchase without accounts
+- **Guest Checkout** (no auth): No authentication required – customers can browse and purchase without accounts
 - **Product Catalog**: Browse 23 products with images, descriptions, and pricing (ISR for performance)
 - **Product Search & Pagination**: Full-text search (`?q=term`) and pagination (`?page=1&limit=12`) on home page and API
 - **Shopping Cart**: Client-side cart with localStorage persistence, reactive cart count in navbar, and server-validated pricing
 - **UI Polish**: Skeleton loading states, smooth animations (Framer Motion), and accessible design
 - **Toast Notifications**: Accessible toast system with auto-dismiss, hover pause, and portal rendering
 - **Stripe Checkout**: Secure payment processing with Stripe Checkout Sessions
-- **Complete Order History**: Webhook persists both Orders and OrderItems in DB using product metadata mapping (enables analytics, refunds, reorders)
+- **Complete Order History**: Webhook persists both Orders and OrderItems in DB using product metadata mapping. **Why it matters**: Enables DB-only receipts, analytics, and refund bookkeeping without additional Stripe calls.
 - **Promo Codes** (optional): Enable with `NEXT_PUBLIC_ENABLE_PROMO_CODES=true` to allow discount coupons
 - **Responsive Design**: Mobile-friendly UI with Tailwind CSS dark theme
 - **Error Handling**: Global ErrorBoundary, toast notifications, image fallbacks
 - **Rate Limiting**: Simple in-memory rate limiting on checkout endpoint (10 req/min, demo limitation noted)
 
-## What's Production-Shaped
+## Production-Ready Practices
 
 This demo includes several production-ready patterns:
 
@@ -154,6 +173,10 @@ This demo includes several production-ready patterns:
 - Automatic image optimization and lazy loading
 - Graceful fallback to gradient placeholder on load errors
 - Proper sizing and responsive images
+
+✅ **Security**
+- Webhook verifies signatures using raw body (prevents spoofing)
+- Server builds line items from DB prices only; client cart is informational
 
 ## Rate Limiting (Demo)
 
