@@ -81,19 +81,33 @@ export default function CheckoutPage() {
       return;
     }
 
+    let mounted = true;
+
     const fetchProducts = async () => {
       try {
         const ids = items.map((i) => i.productId).join(',');
         const res = await fetch(`/api/products?ids=${ids}`, { cache: 'no-store' });
-        const { products: fetchedProducts } = await res.json();
-        setProducts(fetchedProducts || []);
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`);
+        }
+        const data = await res.json();
+        const fetchedProducts = data.products || [];
+        
+        if (!mounted) return;
+        
+        setProducts(fetchedProducts);
       } catch (error) {
         console.error('Failed to fetch products for summary:', error);
+        if (!mounted) return;
         setProducts([]);
       }
     };
 
     fetchProducts();
+
+    return () => {
+      mounted = false;
+    };
   }, [items]);
 
   // Cart validation: remove unavailable products on mount (run once after items load)
