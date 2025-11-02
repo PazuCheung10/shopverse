@@ -69,12 +69,14 @@ Expect: `ready - started server on http://localhost:3001`
    
    **Terminal C** - Test the webhook:
    ```bash
-   # Health check (should return {"ok":true,"route":"stripe/webhook"})
-   curl http://localhost:3001/api/stripe/webhook
+   # Health check (should return {"ok":true,"route":"ping"})
+   curl http://localhost:3001/api/ping
    
-   # Trigger a test event
+   # Trigger a test event (simulates webhook without making a real payment)
    stripe trigger checkout.session.completed
    ```
+   
+   > **Note**: You can run `stripe trigger checkout.session.completed` without making a real Checkout payment; it's useful to verify webhook → DB writes locally.
    
    - In Terminal A, you should see: `✅ Webhook received: checkout.session.completed` and `🧾 Order upserted: <id> PAID`
    - In Terminal B, you should see: `← [200] OK`
