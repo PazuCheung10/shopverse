@@ -179,7 +179,7 @@ export default function CartSheet({ isOpen, onClose }: CartSheetProps) {
                         {product.name}
                       </Link>
                       <div className="text-slate-400 text-sm mb-2">
-                        <Price unitAmount={product.unitAmount} currency={product.currency} />
+                        <Price amount={product.unitAmount} currency={product.currency} />
                       </div>
                       <div className="flex items-center gap-2">
                         <label className="sr-only" htmlFor={`qty-${item.productId}`}>
@@ -239,7 +239,9 @@ export default function CartSheet({ isOpen, onClose }: CartSheetProps) {
           <div className="border-t border-slate-700 p-4 space-y-4">
             <div className="flex justify-between items-center text-lg">
               <span className="text-slate-400">Subtotal:</span>
-              <Price unitAmount={subtotal} currency={currency} className="text-2xl text-cyan-300" />
+              <span className="text-2xl text-cyan-300">
+                <Price amount={subtotal} currency={currency} />
+              </span>
             </div>
             <Link
               href={routes.checkout}

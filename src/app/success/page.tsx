@@ -189,7 +189,7 @@ export default function SuccessPage() {
                         {item.product.name}
                       </Link>
                       <div className="text-slate-400 text-sm mt-1">
-                        Quantity: {item.quantity} × <Price unitAmount={item.unitAmount} currency={order.currency} />
+                        Quantity: {item.quantity} × <Price amount={item.unitAmount} currency={order.currency} />
                       </div>
                     </div>
                   </div>
@@ -207,11 +207,15 @@ export default function SuccessPage() {
           <div className="border-t border-slate-700 pt-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-slate-400">Subtotal:</span>
-              <Price unitAmount={order.subtotal} currency={order.currency} className="text-white" />
+              <span className="text-white">
+                <Price amount={order.subtotal} currency={order.currency} />
+              </span>
             </div>
             <div className="flex justify-between items-center text-xl font-bold">
               <span className="text-cyan-300">Total:</span>
-              <Price unitAmount={order.total} currency={order.currency} className="text-cyan-300" />
+              <span className="text-cyan-300">
+                <Price amount={order.total} currency={order.currency} />
+              </span>
             </div>
           </div>
         </div>

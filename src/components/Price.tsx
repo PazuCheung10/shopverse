@@ -1,15 +1,8 @@
-import { formatPrice } from '@/lib/currency';
+export default function Price({ amount, currency = 'usd' }: { amount: number; currency?: string }) {
+  const formatted = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+  }).format(amount / 100);
 
-interface PriceProps {
-  unitAmount: number;
-  currency?: string;
-  className?: string;
-}
-
-export default function Price({ unitAmount, currency = 'usd', className = '' }: PriceProps) {
-  return (
-    <span className={`font-semibold ${className}`}>
-      {formatPrice(unitAmount, currency)}
-    </span>
-  );
+  return <span>{formatted}</span>;
 }

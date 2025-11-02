@@ -113,7 +113,7 @@ export default function CartPage() {
                         {product.name}
                       </Link>
                       <div className="text-slate-400 mb-4">
-                        <Price unitAmount={product.unitAmount} currency={product.currency} />
+                        <Price amount={product.unitAmount} currency={product.currency} />
                       </div>
                       <div className="flex items-center gap-2">
                         <label className="sr-only" htmlFor={`qty-${item.productId}`}>
@@ -159,7 +159,9 @@ export default function CartPage() {
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
               <div className="flex justify-between items-center text-2xl mb-6">
                 <span className="text-slate-400">Subtotal:</span>
-                <Price unitAmount={subtotal} currency={currency} className="text-cyan-300" />
+                <span className="text-cyan-300">
+                  <Price amount={subtotal} currency={currency} />
+                </span>
               </div>
               <Link
                 href={routes.checkout}

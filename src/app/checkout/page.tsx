@@ -184,7 +184,7 @@ export default function CheckoutPage() {
                           {product.name}
                         </Link>
                         <div className="text-slate-400 text-sm">
-                          Qty: {item.quantity} × <Price unitAmount={product.unitAmount} currency={product.currency} />
+                          Qty: {item.quantity} × <Price amount={product.unitAmount} currency={product.currency} />
                         </div>
                       </div>
                     </div>
@@ -196,7 +196,9 @@ export default function CheckoutPage() {
               <div className="border-t border-slate-700 pt-4 mt-4">
                 <div className="flex justify-between items-center text-xl mb-6">
                   <span className="text-slate-400">Subtotal:</span>
-                  <Price unitAmount={subtotal} currency={currency} className="text-cyan-300" />
+                  <span className="text-cyan-300">
+                    <Price amount={subtotal} currency={currency} />
+                  </span>
                 </div>
 
                 {/* Submit Button */}

@@ -1,10 +1,19 @@
-import { notFound } from 'next/navigation';
-import { getProductBySlug } from '@/lib/products';
-import ProductGallery from '@/components/ProductGallery';
+import Image from 'next/image';
+import { prisma } from '@/lib/prisma';
 import Price from '@/components/Price';
 import AddToCart from '@/components/AddToCart';
+import { notFound } from 'next/navigation';
 
-export const revalidate = 60; // ISR: Revalidate every 60 seconds
+export async function generateStaticParams() {
+  const slugs = await prisma.product.findMany({
+    where: { active: true },
+    select: { slug: true },
+  });
+
+  return slugs.map((s) => ({ slug: s.slug }));
+}
+
+export const revalidate = 60;
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -12,44 +21,29 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const p = await prisma.product.findUnique({ where: { slug } });
 
-  if (!product) {
-    notFound();
-  }
+  if (!p || !p.active) return notFound();
 
   return (
-    <>
-      <div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Image */}
-          <div>
-            <ProductGallery imageUrl={product.imageUrl} name={product.name} />
-          </div>
-
-          {/* Product Details */}
-          <div className="flex flex-col">
-            <h1 className="text-4xl font-bold text-cyan-300 mb-4">{product.name}</h1>
-            
-            <div className="mb-6">
-              <Price
-                unitAmount={product.unitAmount}
-                currency={product.currency}
-                className="text-3xl text-cyan-300"
-              />
-            </div>
-
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-white mb-3">Description</h2>
-              <p className="text-slate-300 leading-relaxed">{product.description}</p>
-            </div>
-
-            <div className="mt-auto">
-              <AddToCart productId={product.id} />
-            </div>
-          </div>
-        </div>
+    <div className="grid gap-8 md:grid-cols-2">
+      <div className="relative aspect-square overflow-hidden rounded-lg border border-white/10">
+        <Image
+          src={p.imageUrl}
+          alt={p.name}
+          fill
+          className="object-cover"
+          sizes="(max-width:768px) 100vw, 50vw"
+        />
       </div>
-    </>
+      <div>
+        <h1 className="mb-2 text-2xl font-semibold">{p.name}</h1>
+        <div className="mb-4 text-cyan-300">
+          <Price amount={p.unitAmount} currency={p.currency} />
+        </div>
+        <p className="mb-6 text-slate-300">{p.description}</p>
+        <AddToCart productId={p.id} />
+      </div>
+    </div>
   );
 }

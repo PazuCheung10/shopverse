@@ -57,7 +57,7 @@ export function useToast() {
                   : toast.type === 'error'
                     ? 'bg-red-500/90 text-white'
                     : 'bg-cyan-500/90 text-white'
-              } animate-in slide-in-from-top-5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950`}
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950`}
               tabIndex={-1}
             >
               {toast.message}
