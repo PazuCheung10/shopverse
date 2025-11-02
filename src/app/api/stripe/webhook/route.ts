@@ -20,11 +20,11 @@ export async function POST(req: Request) {
   // Validate webhook secret is set
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.error('❌ STRIPE_WEBHOOK_SECRET is missing. Get it from: stripe listen --forward-to localhost:3000/api/stripe/webhook');
+    console.error('❌ STRIPE_WEBHOOK_SECRET is missing. Get it from: stripe listen --forward-to localhost:3001/api/stripe/webhook');
     return NextResponse.json(
       { 
         error: 'Server configuration missing',
-        message: 'STRIPE_WEBHOOK_SECRET is not set. Run "stripe listen --forward-to localhost:3000/api/stripe/webhook" and copy the whsec_... value to .env.local, then restart the dev server.'
+        message: 'STRIPE_WEBHOOK_SECRET is not set. Run "stripe listen --forward-to localhost:3001/api/stripe/webhook" and copy the whsec_... value to .env.local, then restart the dev server.'
       },
       { status: 500 }
     );

@@ -2,6 +2,8 @@
 
 Minimal, modern e-commerce demo from product list → cart → Stripe Checkout → order receipt (via webhooks).
 
+I kept the surface minimal to highlight production-grade concerns clients pay for: strict validation, server-trusted pricing, and webhook-driven persistence. Admin/auth/inventory are intentionally omitted to focus on the hard parts of a real checkout system.
+
 ![Demo Flow](demo.gif)
 
 *30-second demo: Catalog → Cart → Checkout → Receipt.*
@@ -218,6 +220,8 @@ The webhook handler ensures complete order history:
 - **Form Validation**: Real-time Zod validation with clear messages
 
 ## API Endpoints
+
+- `GET /api/ping` – Health check endpoint (returns `{ ok: true, route: 'ping' }`)
 
 - `GET /api/products` – Products API
   - `?ids=id1,id2` – Fetch specific products (for cart)
