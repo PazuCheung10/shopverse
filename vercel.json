@@ -1,5 +1,4 @@
 {
-  "buildCommand": "pnpm db:generate && pnpm db:migrate:deploy && pnpm build",
-  "installCommand": "pnpm install"
+  "buildCommand": "pnpm db:migrate:deploy && pnpm build"
 }
 
