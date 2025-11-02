@@ -76,7 +76,7 @@ Expect: `ready - started server on http://localhost:3001`
    ```
 
 3. **Browse the app**:
-   - `/` – Product catalog grid (12 demo products, ISR cached)
+   - `/` – Product catalog grid (23 demo products with pagination & search, ISR cached)
    - `/product/[slug]` – Product detail page with Add to Cart button
    - `/cart` – Shopping cart with quantity controls and server-priced subtotal
    - `/checkout` – Address form (RHF + Zod validation) → Stripe Checkout redirect
@@ -99,12 +99,13 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 ## Features
 
 - **Guest Checkout**: No authentication required – customers can browse and purchase without accounts
-- **Product Catalog**: Browse products with images, descriptions, and pricing (ISR for performance)
-- **Product Search & Pagination**: API supports search (`?q=term`) and pagination (`?page=1&limit=12`)
-- **Shopping Cart**: Client-side cart with localStorage persistence and server-validated pricing
-- **Toast Notifications**: Accessible toast system with auto-dismiss and hover pause
+- **Product Catalog**: Browse 23 products with images, descriptions, and pricing (ISR for performance)
+- **Product Search & Pagination**: Full-text search (`?q=term`) and pagination (`?page=1&limit=12`) on home page and API
+- **Shopping Cart**: Client-side cart with localStorage persistence, reactive cart count in navbar, and server-validated pricing
+- **UI Polish**: Skeleton loading states, smooth animations (Framer Motion), and accessible design
+- **Toast Notifications**: Accessible toast system with auto-dismiss, hover pause, and portal rendering
 - **Stripe Checkout**: Secure payment processing with Stripe Checkout Sessions
-- **Order Management**: Webhook-based order persistence with OrderItems stored in DB (faster receipts, complete order history)
+- **Complete Order History**: Webhook persists both Orders and OrderItems in DB using product metadata mapping (enables analytics, refunds, reorders)
 - **Promo Codes** (optional): Enable with `NEXT_PUBLIC_ENABLE_PROMO_CODES=true` to allow discount coupons
 - **Responsive Design**: Mobile-friendly UI with Tailwind CSS dark theme
 
@@ -122,7 +123,8 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 - `POST /api/stripe/webhook` – Stripe webhook handler
   - Verifies signature and persists orders + OrderItems on `checkout.session.completed`
-  - Maps Stripe line items to DB products via `app_product_id` metadata
+  - Maps Stripe line items to DB products via `app_product_id` metadata (set during checkout)
+  - Uses atomic transactions to replace OrderItems (idempotent webhook handling)
   - Returns: `{ received: true }` on success
 
 - `GET /api/orders/[id]` – Fetch order details
@@ -279,23 +281,29 @@ pnpm test
 - `lib/currency.test.ts` - Price formatting utilities
 - `lib/cart.test.ts` - Cart localStorage helpers
 - `lib/validation.test.ts` - Zod schema validation
+- `lib/mask.test.ts` - Email and address masking utilities
 
 **Component Tests:**
 - `components/ProductCard.test.tsx` - Product card rendering
+- `components/AddToCart.test.tsx` - Add to cart functionality and toast notifications
 - `components/AddressForm.test.tsx` - Form validation and submission
+- `components/SuccessReceipt.test.tsx` - Receipt display and cart clearing
 - `components/PromoCodeInput.test.tsx` - Promo code input (optional feature)
 
 **API Route Tests:**
 - `app/api/checkout/route.test.ts` - Checkout session creation with mocked Stripe
-- `app/api/stripe/webhook/route.test.ts` - Webhook signature verification
+- `app/api/stripe/webhook/route.test.ts` - Webhook signature verification and OrderItem persistence
+- `app/api/products/route.test.ts` - Products API pagination and search
 - `app/api/promo-codes/validate/route.test.ts` - Promo code validation
 
 **Important Test Scenarios:**
 - ✅ Invalid form data rejection
 - ✅ Stripe webhook signature verification
+- ✅ OrderItem persistence with metadata mapping
 - ✅ Server-side price validation
 - ✅ Promo code validation (when enabled)
 - ✅ Cart operations (add, update, remove)
+- ✅ Product search and pagination
 
 ## Scripts
 
