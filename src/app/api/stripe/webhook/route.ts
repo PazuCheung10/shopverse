@@ -2,79 +2,76 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
-import { env } from '@/lib/env';
 
 export const runtime = 'nodejs'; // Required for raw body access
 
 export async function POST(req: Request) {
   const sig = (await headers()).get('stripe-signature');
-  
+
   if (!sig) {
+    return NextResponse.json({ error: 'Missing stripe-signature' }, { status: 400 });
+  }
+
+  // Validate webhook secret is set
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error('❌ STRIPE_WEBHOOK_SECRET is missing. Get it from: stripe listen --forward-to localhost:3000/api/stripe/webhook');
     return NextResponse.json(
-      { error: 'Missing stripe-signature header' },
-      { status: 400 }
+      { 
+        error: 'Server configuration missing',
+        message: 'STRIPE_WEBHOOK_SECRET is not set. Run "stripe listen --forward-to localhost:3000/api/stripe/webhook" and copy the whsec_... value to .env.local, then restart the dev server.'
+      },
+      { status: 500 }
     );
   }
 
+  // Read raw body (must use arrayBuffer, never req.json())
   const buf = Buffer.from(await req.arrayBuffer());
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      buf,
-      sig,
-      env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (error: any) {
-    console.error('Webhook signature verification failed:', error.message);
-    return NextResponse.json(
-      { error: 'Invalid signature' },
-      { status: 400 }
-    );
+    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
+  } catch (err: any) {
+    console.error('❌ Invalid signature', err?.message);
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
+  console.log('✅ Webhook received:', event.type);
+
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as any;
-    
+    const s = event.data.object as any;
+
     try {
-      // Upsert order (idempotent on stripePaymentId)
-      // This ensures we don't create duplicate orders if webhook is retried
-      await prisma.order.upsert({
-        where: { stripePaymentId: session.id },
+      const order = await prisma.order.upsert({
+        where: { stripePaymentId: s.id },
         create: {
-          stripePaymentId: session.id,
-          email: session.customer_details?.email ?? '',
-          name: session.customer_details?.name ?? undefined,
-          currency: session.currency ?? 'usd',
-          subtotal: session.amount_subtotal ?? 0,
-          total: session.amount_total ?? 0,
+          stripePaymentId: s.id,
+          email: s.customer_details?.email ?? '',
+          name: s.customer_details?.name ?? undefined,
+          currency: s.currency ?? 'usd',
+          subtotal: s.amount_subtotal ?? 0,
+          total: s.amount_total ?? 0,
           status: 'PAID',
-          addressLine1: session.customer_details?.address?.line1 ?? undefined,
-          addressLine2: session.customer_details?.address?.line2 ?? undefined,
-          city: session.customer_details?.address?.city ?? undefined,
-          state: session.customer_details?.address?.state ?? undefined,
-          postalCode: session.customer_details?.address?.postal_code ?? undefined,
-          country: session.customer_details?.address?.country ?? undefined,
+          addressLine1: s.customer_details?.address?.line1 ?? undefined,
+          addressLine2: s.customer_details?.address?.line2 ?? undefined,
+          city: s.customer_details?.address?.city ?? undefined,
+          state: s.customer_details?.address?.state ?? undefined,
+          postalCode: s.customer_details?.address?.postal_code ?? undefined,
+          country: s.customer_details?.address?.country ?? undefined,
         },
-        update: { 
-          status: 'PAID',
-          // Update totals in case they changed (e.g., shipping adjustments)
-          subtotal: session.amount_subtotal ?? 0,
-          total: session.amount_total ?? 0,
-        },
+        update: { status: 'PAID' },
       });
-      
-      console.log(`Order upserted: ${session.id} for ${session.customer_details?.email ?? 'unknown'}`);
+
+      console.log('🧾 Order upserted:', order.id, order.status);
     } catch (error) {
-      console.error('Failed to upsert order:', error);
-      // Return 500 so Stripe will retry the webhook
+      console.error('❌ Failed to upsert order:', error);
+      // Return 500 so Stripe will retry
       return NextResponse.json(
-        { error: 'Failed to process order', details: error instanceof Error ? error.message : 'Unknown error' },
+        { error: 'Failed to process order' },
         { status: 500 }
       );
     }
   }
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true }, { status: 200 });
 }
-
