@@ -2,6 +2,10 @@
 
 Minimal, modern e-commerce demo from product list → cart → Stripe Checkout → order receipt (via webhooks).
 
+![Demo Flow](demo.gif)
+
+> **Note**: Add a 30-second GIF demonstrating the complete flow: browsing catalog → adding items to cart → filling checkout form → completing Stripe payment → viewing receipt page.
+
 ## Setup
 
 1. Install dependencies:
@@ -108,6 +112,48 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 - **Complete Order History**: Webhook persists both Orders and OrderItems in DB using product metadata mapping (enables analytics, refunds, reorders)
 - **Promo Codes** (optional): Enable with `NEXT_PUBLIC_ENABLE_PROMO_CODES=true` to allow discount coupons
 - **Responsive Design**: Mobile-friendly UI with Tailwind CSS dark theme
+- **Error Handling**: Global ErrorBoundary, toast notifications, image fallbacks
+- **Rate Limiting**: Simple in-memory rate limiting on checkout endpoint (10 req/min, demo limitation noted)
+
+## What's Production-Shaped
+
+This demo includes several production-ready patterns:
+
+✅ **Server-Trusted Pricing**: All prices fetched from database at checkout (never trust client)
+- `/api/checkout` validates products exist and are active
+- Stripe line items built from trusted DB values
+- Client cart is for UX only; server determines final prices
+
+✅ **Webhook Signature Verification**: Stripe webhook handler verifies request signatures
+- Uses raw body buffer for signature verification
+- Returns 400 on invalid signatures (prevents replay attacks)
+- Idempotent order processing (handles duplicate webhooks)
+
+✅ **Complete Order Persistence**: Both Order and OrderItem records stored in database
+- Webhook maps Stripe line items → DB products via `app_product_id` metadata
+- Atomic transactions ensure data consistency
+- Enables order history, analytics, refunds, and reorders
+
+✅ **Rate Limiting**: Basic protection against abuse
+- In-memory sliding window (10 requests/minute per client)
+- Identifies clients by IP address
+- Returns structured 429 errors with `RATE_LIMIT_EXCEEDED` code
+- **Note**: For demo purposes; resets on serverless cold starts
+
+✅ **Error Boundaries**: Global React error boundary catches component crashes
+- Prevents white screen of death
+- Friendly error UI with retry functionality
+- Logs errors (Sentry-ready structure)
+
+✅ **Input Validation**: Zod schemas validate all inputs
+- Client-side (React Hook Form) and server-side validation
+- Type-safe checkout payloads
+- Clear error messages for invalid inputs
+
+✅ **Image Optimization**: Next.js Image component with fallbacks
+- Automatic image optimization and lazy loading
+- Graceful fallback to gradient placeholder on load errors
+- Proper sizing and responsive images
 
 ## Rate Limiting (Demo)
 
@@ -121,6 +167,32 @@ The `/api/checkout` endpoint includes simple in-memory rate limiting for demo pu
 - Persistent store (Redis, database) 
 - Vercel Edge Config
 - External rate limiting service (Cloudflare, etc.)
+
+## Architecture Highlights
+
+### Server-Client Price Validation
+Prices are never trusted from the client. The checkout flow:
+1. Client sends cart items (productId + quantity only)
+2. Server fetches products from DB and validates they exist/are active
+3. Server builds Stripe line items using trusted DB prices
+4. Stripe handles payment with server-controlled pricing
+
+### Webhook → OrderItem Persistence
+The webhook handler ensures complete order history:
+1. Receives `checkout.session.completed` event
+2. Verifies Stripe signature (prevents spoofing)
+3. Upserts Order record (idempotent by `stripePaymentId`)
+4. Fetches Stripe line items with expanded product metadata
+5. Maps each line item to DB product via `app_product_id` metadata
+6. Persists OrderItem records in atomic transaction
+7. Enables order analytics, refunds, and reorders
+
+### Error Handling Strategy
+- **React Errors**: Global ErrorBoundary catches component crashes
+- **API Errors**: Structured error responses with codes (`RATE_LIMIT_EXCEEDED`, etc.)
+- **Network Errors**: Toast notifications for user feedback
+- **Image Failures**: Gradient placeholder fallbacks
+- **Form Validation**: Real-time Zod validation with clear messages
 
 ## API Endpoints
 
