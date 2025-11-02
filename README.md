@@ -30,23 +30,40 @@ npm run db:migrate
 npm run db:seed
 ```
 
-5. Run the development server:
+5. Run the development server (always on port 3000):
 ```bash
+pnpm dev -p 3000
+# or
 npm run dev
 ```
+Expect: `ready - started server on http://localhost:3000`
 
 6. For local webhook testing with Stripe CLI:
-   - First, authenticate (if not already done):
-     ```bash
-     stripe login
-     ```
-   - Then start the webhook listener in a separate terminal:
-     ```bash
-     stripe listen --forward-to localhost:3000/api/stripe/webhook
-     ```
-   - Copy the webhook signing secret (starts with `whsec_`) and add it to `.env.local` as `STRIPE_WEBHOOK_SECRET`
-   - The listener will forward all Stripe events to your local server
-   - Events will appear in the terminal for debugging
+   
+   **Terminal A** - Start dev server:
+   ```bash
+   pnpm dev -p 3000
+   ```
+   
+   **Terminal B** - Start Stripe webhook listener:
+   ```bash
+   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   ```
+   - Copy the webhook signing secret (starts with `whsec_`) that appears
+   - Add it to `.env.local` as `STRIPE_WEBHOOK_SECRET`
+   - **Restart Terminal A** (the dev server) so it picks up the new env var
+   
+   **Terminal C** - Test the webhook:
+   ```bash
+   # Health check (should return {"ok":true,"route":"stripe/webhook"})
+   curl http://localhost:3000/api/stripe/webhook
+   
+   # Trigger a test event
+   stripe trigger checkout.session.completed
+   ```
+   
+   - In Terminal A, you should see: `✅ Webhook received: checkout.session.completed` and `🧾 Order upserted: <id> PAID`
+   - In Terminal B, you should see: `← [200] OK`
 
 7. Open [http://localhost:3000](http://localhost:3000) in your browser.
 

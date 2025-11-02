@@ -5,9 +5,14 @@ import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs'; // Required for raw body access
 
-export async function POST(req: Request) {
-  const sig = (await headers()).get('stripe-signature');
+// Health check endpoint
+export async function GET() {
+  return NextResponse.json({ ok: true, route: 'stripe/webhook' }, { status: 200 });
+}
 
+export async function POST(req: Request) {
+  // Fast 400 if missing signature header (prevents hanging/timeouts)
+  const sig = (await headers()).get('stripe-signature');
   if (!sig) {
     return NextResponse.json({ error: 'Missing stripe-signature' }, { status: 400 });
   }
