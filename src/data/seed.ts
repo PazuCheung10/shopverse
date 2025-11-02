@@ -12,75 +12,75 @@ async function main() {
   const products = await prisma.product.createMany({
     data: [
       {
-        slug: 'wireless-headphones',
-        name: 'Premium Wireless Headphones',
-        description: 'High-quality over-ear headphones with active noise cancellation and 30-hour battery life.',
-        imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
+        slug: 'aurora-headphones',
+        name: 'Aurora Headphones',
+        description: 'Wireless over-ear with spatial audio.',
+        imageUrl: 'https://images.unsplash.com/photo-1518441902110-9d3f2e1b1b48?q=80&w=1200&auto=format&fit=crop',
         currency: 'usd',
-        unitAmount: 29999, // $299.99
+        unitAmount: 15900, // $159.00
         active: true,
       },
       {
-        slug: 'smart-watch',
-        name: 'Smart Watch Pro',
-        description: 'Feature-rich smartwatch with health tracking, GPS, and always-on display.',
-        imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
+        slug: 'nebula-backpack',
+        name: 'Nebula Backpack',
+        description: 'Everyday carry with laptop sleeve.',
+        imageUrl: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop',
         currency: 'usd',
-        unitAmount: 39999, // $399.99
+        unitAmount: 9800, // $98.00
         active: true,
       },
       {
-        slug: 'laptop-stand',
-        name: 'Ergonomic Laptop Stand',
-        description: 'Adjustable aluminum stand that raises your laptop for better posture and cooling.',
-        imageUrl: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=400&fit=crop',
+        slug: 'stellar-watch',
+        name: 'Stellar Watch',
+        description: 'Premium smartwatch with health monitoring.',
+        imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop',
         currency: 'usd',
-        unitAmount: 7999, // $79.99
+        unitAmount: 34900, // $349.00
         active: true,
       },
       {
-        slug: 'wireless-mouse',
-        name: 'Ergonomic Wireless Mouse',
-        description: 'Comfortable wireless mouse with precision tracking and long battery life.',
-        imageUrl: 'https://images.unsplash.com/photo-1527814050087-3793815479db?w=400&h=400&fit=crop',
+        slug: 'cosmic-keyboard',
+        name: 'Cosmic Keyboard',
+        description: 'Mechanical RGB keyboard with premium switches.',
+        imageUrl: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?q=80&w=1200&auto=format&fit=crop',
         currency: 'usd',
-        unitAmount: 4999, // $49.99
+        unitAmount: 12900, // $129.00
         active: true,
       },
       {
-        slug: 'mechanical-keyboard',
-        name: 'Mechanical Keyboard',
-        description: 'RGB-backlit mechanical keyboard with cherry MX switches and aluminum frame.',
-        imageUrl: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400&h=400&fit=crop',
+        slug: 'galaxy-mouse',
+        name: 'Galaxy Mouse',
+        description: 'Wireless ergonomic mouse with precision tracking.',
+        imageUrl: 'https://images.unsplash.com/photo-1527814050087-3793815479db?q=80&w=1200&auto=format&fit=crop',
         currency: 'usd',
-        unitAmount: 14999, // $149.99
+        unitAmount: 4900, // $49.00
         active: true,
       },
       {
-        slug: 'usb-c-hub',
-        name: 'USB-C Hub Multiport',
-        description: 'Compact hub with HDMI, USB-A, USB-C, and SD card reader ports.',
-        imageUrl: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=400&h=400&fit=crop',
+        slug: 'lunar-laptop-stand',
+        name: 'Lunar Laptop Stand',
+        description: 'Adjustable aluminum stand for optimal ergonomics.',
+        imageUrl: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=1200&auto=format&fit=crop',
         currency: 'usd',
-        unitAmount: 5999, // $59.99
+        unitAmount: 7900, // $79.00
         active: true,
       },
       {
-        slug: 'monitor-arm',
-        name: 'Dual Monitor Arm',
-        description: 'Heavy-duty monitor mount supporting two displays up to 32 inches each.',
-        imageUrl: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400&h=400&fit=crop',
+        slug: 'solar-monitor',
+        name: 'Solar Monitor',
+        description: '27-inch 4K display with HDR support.',
+        imageUrl: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=1200&auto=format&fit=crop',
         currency: 'usd',
-        unitAmount: 12999, // $129.99
+        unitAmount: 44900, // $449.00
         active: true,
       },
       {
-        slug: 'desk-mat',
-        name: 'Extended Desk Mat',
-        description: 'Large premium desk pad with smooth surface for mouse and keyboard. Water-resistant.',
-        imageUrl: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400&h=400&fit=crop',
+        slug: 'orbit-desk-pad',
+        name: 'Orbit Desk Pad',
+        description: 'Extended desk mat with premium finish.',
+        imageUrl: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?q=80&w=1200&auto=format&fit=crop',
         currency: 'usd',
-        unitAmount: 3499, // $34.99
+        unitAmount: 3500, // $35.00
         active: true,
       },
     ],
