@@ -1,178 +1,131 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import useSWR from 'swr';
 import Link from 'next/link';
-import { getCart, updateQty, removeItem, total } from '@/lib/cart';
-import { routes } from '@/lib/routes';
-import Price from '@/components/Price';
-import EmptyState from '@/components/EmptyState';
-import { formatPrice } from '@/lib/currency';
 
-interface Product {
-  id: string;
-  name: string;
-  unitAmount: number;
-  currency: string;
-  imageUrl: string;
-  slug: string;
-}
+type Item = { productId: string; quantity: number };
+
+const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((r) => r.json());
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState(getCart());
-  const [products, setProducts] = useState<Map<string, Product>>(new Map());
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('/api/products');
-        const allProducts: Product[] = await response.json();
-        const productMap = new Map<string, Product>();
-        allProducts.forEach((p) => productMap.set(p.id, p));
-        setProducts(productMap);
-      } catch (error) {
-        console.error('Failed to fetch products:', error);
-      } finally {
-        setLoading(false);
+    const loadCart = () => {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('shopverse:cart') : null;
+      setItems(raw ? JSON.parse(raw) : []);
+    };
+    loadCart();
+    window.addEventListener('storage', loadCart);
+    window.addEventListener('cartUpdated', loadCart);
+    return () => {
+      window.removeEventListener('storage', loadCart);
+      window.removeEventListener('cartUpdated', loadCart);
+    };
+  }, []);
+
+  const ids = items.map((i) => i.productId).join(',');
+  const { data } = useSWR(ids ? `/api/products?ids=${ids}` : null, fetcher);
+  const products: any[] = data?.products ?? [];
+
+  const updateQty = (productId: string, delta: number) => {
+    const raw = localStorage.getItem('shopverse:cart');
+    const current: Item[] = raw ? JSON.parse(raw) : [];
+    const item = current.find((i) => i.productId === productId);
+    if (item) {
+      item.quantity = Math.max(1, Math.min(10, item.quantity + delta));
+      if (item.quantity === 0) {
+        current.splice(current.indexOf(item), 1);
       }
-    };
-    fetchProducts();
-  }, []);
-
-  useEffect(() => {
-    // Sync cart on mount and listen for storage changes
-    const handleStorageChange = () => {
-      setCartItems(getCart());
-    };
-    window.addEventListener('storage', handleStorageChange);
-    handleStorageChange();
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const handleQtyChange = (productId: string, newQty: number) => {
-    updateQty(productId, newQty);
-    setCartItems(getCart());
+    } else if (delta > 0) {
+      current.push({ productId, quantity: 1 });
+    }
+    localStorage.setItem('shopverse:cart', JSON.stringify(current));
+    setItems(current);
     window.dispatchEvent(new Event('cartUpdated'));
   };
 
-  const handleRemove = (productId: string) => {
-    removeItem(productId);
-    setCartItems(getCart());
+  const remove = (productId: string) => {
+    const raw = localStorage.getItem('shopverse:cart');
+    const current: Item[] = raw ? JSON.parse(raw) : [];
+    const updated = current.filter((i) => i.productId !== productId);
+    localStorage.setItem('shopverse:cart', JSON.stringify(updated));
+    setItems(updated);
     window.dispatchEvent(new Event('cartUpdated'));
   };
 
-  const subtotal = total(
-    cartItems,
-    new Map(
-      Array.from(products.entries()).map(([id, p]) => [id, { unitAmount: p.unitAmount, currency: p.currency }])
-    )
-  );
-
-  const currency = cartItems.length > 0 && products.size > 0 ? Array.from(products.values())[0]?.currency || 'usd' : 'usd';
+  const subtotal = items.reduce((sum, i) => {
+    const p = products.find((p) => p.id === i.productId);
+    return sum + (p?.unitAmount ?? 0) * i.quantity;
+  }, 0);
 
   return (
-    <>
-      <div>
-        <h1 className="text-4xl font-bold text-cyan-300 mb-8">Shopping Cart</h1>
-
-        {loading ? (
-          <div className="text-center text-slate-400 py-12">Loading...</div>
-        ) : cartItems.length === 0 ? (
-          <EmptyState title="Your cart is empty" message="Add some products to get started!" />
-        ) : (
-          <>
-            <div className="space-y-4 mb-8">
-              {cartItems.map((item) => {
-                const product = products.get(item.productId);
-                if (!product) return null;
-
-                return (
-                  <div
-                    key={item.productId}
-                    className="flex gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-4"
-                  >
-                    <Link
-                      href={routes.product(product.slug)}
-                      className="relative w-24 h-24 flex-shrink-0 rounded overflow-hidden"
-                    >
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                        sizes="96px"
-                      />
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        href={routes.product(product.slug)}
-                        className="block text-xl text-cyan-300 font-semibold hover:text-cyan-200 mb-2"
+    <div className="space-y-6">
+      <h1 className="text-xl font-semibold">Your cart</h1>
+      {!items.length ? (
+        <p>
+          Cart is empty. <Link className="text-cyan-300" href="/">Browse products</Link>
+        </p>
+      ) : (
+        <>
+          <ul className="space-y-3">
+            {items.map((i) => {
+              const p = products.find((p) => p.id === i.productId);
+              return (
+                <li key={i.productId} className="flex items-center justify-between rounded border border-white/10 p-3">
+                  <div className="flex-1">
+                    <div className="font-medium">{p?.name ?? 'Loading...'}</div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => updateQty(i.productId, -1)}
+                        className="w-6 h-6 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm"
                       >
-                        {product.name}
-                      </Link>
-                      <div className="text-slate-400 mb-4">
-                        <Price amount={product.unitAmount} currency={product.currency} />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="sr-only" htmlFor={`qty-${item.productId}`}>
-                          Quantity
-                        </label>
-                        <button
-                          onClick={() => handleQtyChange(item.productId, item.quantity - 1)}
-                          className="w-8 h-8 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
-                          aria-label="Decrease quantity"
-                        >
-                          -
-                        </button>
-                        <input
-                          id={`qty-${item.productId}`}
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={item.quantity}
-                          onChange={(e) => handleQtyChange(item.productId, parseInt(e.target.value) || 1)}
-                          className="w-16 text-center bg-white/10 rounded px-2 py-1 text-white"
-                        />
-                        <button
-                          onClick={() => handleQtyChange(item.productId, item.quantity + 1)}
-                          className="w-8 h-8 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
-                          aria-label="Increase quantity"
-                        >
-                          +
-                        </button>
-                        <button
-                          onClick={() => handleRemove(item.productId)}
-                          className="ml-auto px-4 py-2 text-red-400 hover:text-red-300 transition-colors"
-                          aria-label="Remove item"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                        −
+                      </button>
+                      <span className="text-sm text-slate-400 min-w-[2ch] text-center">Qty: {i.quantity}</span>
+                      <button
+                        onClick={() => updateQty(i.productId, 1)}
+                        className="w-6 h-6 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => remove(i.productId)}
+                        className="ml-4 text-sm text-red-400 hover:text-red-300"
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-              <div className="flex justify-between items-center text-2xl mb-6">
-                <span className="text-slate-400">Subtotal:</span>
-                <span className="text-cyan-300">
-                  <Price amount={subtotal} currency={currency} />
-                </span>
-              </div>
-              <Link
-                href={routes.checkout}
-                className="block w-full px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 text-center transition-colors"
-              >
-                Proceed to Checkout
-              </Link>
-            </div>
-          </>
-        )}
-      </div>
-    </>
+                  <div className="text-cyan-300 ml-4">
+                    {p
+                      ? new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: p.currency.toUpperCase(),
+                        }).format((p.unitAmount * i.quantity) / 100)
+                      : '—'}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="flex items-center justify-between border-t border-white/10 pt-4">
+            <span className="text-slate-400">Subtotal</span>
+            <span className="text-lg text-cyan-300">
+              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(subtotal / 100)}
+            </span>
+          </div>
+          <div className="flex justify-end">
+            <Link
+              href="/checkout"
+              className="rounded-md bg-cyan-500 px-4 py-2 font-medium text-slate-950 hover:bg-cyan-400"
+            >
+              Continue to checkout
+            </Link>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProducts } from '@/lib/products';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
-  try {
-    const products = await getProducts();
-    return NextResponse.json(products);
-  } catch (error) {
-    console.error('Products API error:', error);
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
-  }
+  const ids = req.nextUrl.searchParams.get('ids');
+  if (!ids) return NextResponse.json({ products: [] });
+
+  const list = ids.split(',').filter(Boolean);
+  const products = await prisma.product.findMany({ where: { id: { in: list } } });
+  return NextResponse.json({ products });
 }
