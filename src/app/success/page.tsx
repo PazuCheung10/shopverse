@@ -88,22 +88,20 @@ export default function SuccessPage() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen p-4">
-        <div className="max-w-2xl mx-auto">
-          <ErrorState
-            title="Order Not Found"
-            message={error || 'Unable to retrieve order details. Please contact support if this persists.'}
-          />
-          <div className="text-center mt-8">
-            <Link
-              href={routes.home}
-              className="inline-block px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 transition-colors"
-            >
-              Back to Home
-            </Link>
-          </div>
+      <>
+        <ErrorState
+          title="Order Not Found"
+          message={error || 'Unable to retrieve order details. Please contact support if this persists.'}
+        />
+        <div className="text-center mt-8">
+          <Link
+            href={routes.home}
+            className="inline-block px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 transition-colors"
+          >
+            Back to Home
+          </Link>
         </div>
-      </div>
+      </>
     );
   }
 
