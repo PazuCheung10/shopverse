@@ -1,23 +1,43 @@
 import { prisma } from '@/lib/prisma';
 import ProductCard from '@/components/ProductCard';
 import EmptyState from '@/components/EmptyState';
+import Pagination from '@/components/Pagination';
+import SearchBar from '@/components/SearchBar';
+import { Suspense } from 'react';
 
 export const revalidate = 60;
 
-export default async function HomePage() {
-  let products;
-  try {
-    products = await prisma.product.findMany({
-      where: { active: true },
-      orderBy: { createdAt: 'desc' },
-    });
-  } catch (error) {
-    console.error('Database error:', error);
-    // Return empty array if database is not connected
-    products = [];
+interface HomePageProps {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}
+
+async function ProductGrid({ page = 1, searchQuery }: { page: number; searchQuery?: string }) {
+  const limit = 12;
+  const skip = (page - 1) * limit;
+
+  // Build where clause
+  const where: any = { active: true };
+  
+  if (searchQuery?.trim()) {
+    where.OR = [
+      { name: { contains: searchQuery.trim(), mode: 'insensitive' } },
+      { description: { contains: searchQuery.trim(), mode: 'insensitive' } },
+    ];
   }
 
-  if (products.length === 0) {
+  let products, total;
+  try {
+    [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.product.count({ where }),
+    ]);
+  } catch (error) {
+    console.error('Database error:', error);
     return (
       <EmptyState
         title="Database Not Connected"
@@ -26,11 +46,45 @@ export default async function HomePage() {
     );
   }
 
+  if (products.length === 0) {
+    return (
+      <EmptyState
+        title="No products found"
+        message={searchQuery ? `No products match "${searchQuery}"` : 'No products available.'}
+      />
+    );
+  }
+
+  const hasMore = skip + products.length < total;
+
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {products.map((p) => (
-        <ProductCard key={p.id} p={p} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((p) => (
+          <ProductCard key={p.id} p={p} />
+        ))}
+      </div>
+      <Pagination
+        page={page}
+        limit={limit}
+        total={total}
+        hasMore={hasMore}
+      />
+    </>
+  );
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page || '1', 10));
+  const searchQuery = params.q;
+
+  return (
+    <>
+      <SearchBar />
+      <Suspense fallback={<div className="text-center text-slate-400">Loading products...</div>}>
+        <ProductGrid page={page} searchQuery={searchQuery} />
+      </Suspense>
+    </>
   );
 }
