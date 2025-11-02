@@ -47,7 +47,7 @@ export default function ProductCard({
             }
       }
       whileHover={reducedMotion ? {} : { y: -4 }}
-      className="rounded-lg border border-white/10 bg-white/5 p-4 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10"
+      className="rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-4 transition-all hover:border-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/20 hover:bg-gradient-to-br hover:from-white/8 hover:to-white/[0.03]"
     >
       <Link href={`/product/${p.slug}`} className="block">
         <div className="relative mb-3 aspect-square overflow-hidden rounded-md">

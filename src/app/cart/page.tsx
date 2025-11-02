@@ -79,20 +79,20 @@ export default function CartPage() {
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => updateQty(i.productId, -1)}
-                        className="w-6 h-6 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm"
+                        className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 hover:border border-white/20 flex items-center justify-center text-sm font-semibold transition-all"
                       >
                         −
                       </button>
-                      <span className="text-sm text-slate-400 min-w-[2ch] text-center">Qty: {i.quantity}</span>
+                      <span className="text-sm text-slate-300 min-w-[2ch] text-center font-medium">Qty: {i.quantity}</span>
                       <button
                         onClick={() => updateQty(i.productId, 1)}
-                        className="w-6 h-6 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm"
+                        className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 hover:border border-white/20 flex items-center justify-center text-sm font-semibold transition-all"
                       >
                         +
                       </button>
                       <button
                         onClick={() => remove(i.productId)}
-                        className="ml-4 text-sm text-red-400 hover:text-red-300"
+                        className="ml-4 text-sm text-red-400 hover:text-red-300 font-medium underline decoration-red-400/50 hover:decoration-red-300 transition-colors"
                       >
                         Remove
                       </button>
@@ -119,7 +119,7 @@ export default function CartPage() {
           <div className="flex justify-end">
             <Link
               href="/checkout"
-              className="rounded-md bg-cyan-500 px-4 py-2 font-medium text-slate-950 hover:bg-cyan-400"
+              className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3 font-semibold text-slate-950 hover:from-cyan-400 hover:to-cyan-500 hover:shadow-lg hover:shadow-cyan-500/30 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
             >
               Continue to checkout
             </Link>

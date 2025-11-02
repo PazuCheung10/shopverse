@@ -44,23 +44,28 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="border-b border-white/10">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <Link href="/" className="text-lg font-semibold text-cyan-300 hover:text-cyan-200 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 rounded">
+        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-cyan-500 bg-clip-text text-transparent hover:from-cyan-200 hover:to-cyan-400 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 rounded">
           ShopVerse
         </Link>
         <nav className="flex items-center gap-6">
           <Link
             href="/"
-            className="text-slate-300 hover:text-cyan-300 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 rounded px-2 py-1"
+            className="text-slate-300 hover:text-cyan-300 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 rounded px-3 py-1.5"
           >
             Catalog
           </Link>
           <Link
             href="/cart"
-            className="text-slate-300 hover:text-cyan-300 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 rounded px-2 py-1"
+            className="relative text-slate-300 hover:text-cyan-300 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 rounded px-3 py-1.5"
           >
-            Cart ({count})
+            Cart
+            {count > 0 && (
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                {count > 9 ? '9+' : count}
+              </span>
+            )}
           </Link>
         </nav>
       </div>

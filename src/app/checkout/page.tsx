@@ -221,7 +221,7 @@ export default function CheckoutPage() {
           <input
             placeholder="Email"
             {...form.register('email')}
-            className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
           />
           {form.formState.errors.email && (
             <p className="mt-1 text-sm text-red-400">{form.formState.errors.email.message}</p>
@@ -232,7 +232,7 @@ export default function CheckoutPage() {
           <input
             placeholder="Name"
             {...form.register('name')}
-            className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
           />
           {form.formState.errors.name && (
             <p className="mt-1 text-sm text-red-400">{form.formState.errors.name.message}</p>
@@ -243,7 +243,7 @@ export default function CheckoutPage() {
           <input
             placeholder="Address line 1"
             {...form.register('addressLine1')}
-            className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
           />
           {form.formState.errors.addressLine1 && (
             <p className="mt-1 text-sm text-red-400">{form.formState.errors.addressLine1.message}</p>
@@ -254,7 +254,7 @@ export default function CheckoutPage() {
           <input
             placeholder="Address line 2 (optional)"
             {...form.register('addressLine2')}
-            className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
           />
           {form.formState.errors.addressLine2 && (
             <p className="mt-1 text-sm text-red-400">{form.formState.errors.addressLine2.message}</p>
@@ -266,7 +266,7 @@ export default function CheckoutPage() {
             <input
               placeholder="City"
               {...form.register('city')}
-              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
             />
             {form.formState.errors.city && (
               <p className="mt-1 text-sm text-red-400">{form.formState.errors.city.message}</p>
@@ -276,7 +276,7 @@ export default function CheckoutPage() {
             <input
               placeholder="State (optional)"
               {...form.register('state')}
-              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
             />
             {form.formState.errors.state && (
               <p className="mt-1 text-sm text-red-400">{form.formState.errors.state.message}</p>
@@ -289,7 +289,7 @@ export default function CheckoutPage() {
             <input
               placeholder="Postal code"
               {...form.register('postalCode')}
-              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
             />
             {form.formState.errors.postalCode && (
               <p className="mt-1 text-sm text-red-400">{form.formState.errors.postalCode.message}</p>
@@ -299,7 +299,7 @@ export default function CheckoutPage() {
             <input
               placeholder="Country (US/CA/HK)"
               {...form.register('country')}
-              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
             />
             {form.formState.errors.country && (
               <p className="mt-1 text-sm text-red-400">{form.formState.errors.country.message}</p>
@@ -336,7 +336,7 @@ export default function CheckoutPage() {
                   }
                 }
               }}
-              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className="w-full rounded-lg bg-white/5 border border-white/20 p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400/50 transition-all"
             />
             {promoValid && promoDiscount && (
               <p className="mt-1 text-xs text-green-400">
@@ -349,7 +349,7 @@ export default function CheckoutPage() {
         <button
           type="submit"
           disabled={!form.formState.isValid || isSubmitting || isEmpty}
-          className="rounded bg-cyan-500 px-4 py-2 font-medium text-slate-950 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3 font-semibold text-slate-950 hover:from-cyan-400 hover:to-cyan-500 hover:shadow-lg hover:shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <>
