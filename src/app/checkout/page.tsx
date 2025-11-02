@@ -12,6 +12,27 @@ import Image from 'next/image';
 import ErrorState from '@/components/ErrorState';
 import Price from '@/components/Price';
 
+function ImagePlaceholder() {
+  return (
+    <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 flex items-center justify-center">
+      <svg
+        className="w-8 h-8 text-slate-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    </div>
+  );
+}
+
 interface Product {
   id: string;
   name: string;
@@ -29,6 +50,7 @@ export default function CheckoutPage() {
   const [promoValid, setPromoValid] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState<{ type: 'percentage' | 'fixed'; value: number } | null>(null);
   const [enablePromoCodes, setEnablePromoCodes] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const toast = useToast();
 
   const form = useForm<z.infer<typeof AddressSchema>>({
@@ -333,13 +355,20 @@ export default function CheckoutPage() {
                 return (
                   <div key={item.productId} className="flex gap-3">
                     <div className="relative w-16 h-16 flex-shrink-0 rounded border border-white/10 overflow-hidden">
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                        sizes="64px"
-                      />
+                      {imageErrors.has(item.productId) ? (
+                        <ImagePlaceholder />
+                      ) : (
+                        <Image
+                          src={product.imageUrl}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                          onError={() => {
+                            setImageErrors((prev) => new Set(prev).add(item.productId));
+                          }}
+                        />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{product.name}</p>

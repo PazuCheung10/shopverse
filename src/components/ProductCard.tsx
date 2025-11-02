@@ -22,6 +22,7 @@ export default function ProductCard({
   index?: number;
 }) {
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -50,13 +51,33 @@ export default function ProductCard({
     >
       <Link href={`/product/${p.slug}`} className="block">
         <div className="relative mb-3 aspect-square overflow-hidden rounded-md">
-          <Image
-            src={p.imageUrl}
-            alt={p.name}
-            fill
-            className="object-cover transition-transform duration-300 hover:scale-105"
-            sizes="(max-width:768px) 100vw, 33vw"
-          />
+          {imgError ? (
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 flex items-center justify-center">
+              <svg
+                className="w-12 h-12 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          ) : (
+            <Image
+              src={p.imageUrl}
+              alt={p.name}
+              fill
+              className="object-cover transition-transform duration-300 hover:scale-105"
+              sizes="(max-width:768px) 100vw, 33vw"
+              onError={() => setImgError(true)}
+            />
+          )}
         </div>
         <h3 className="mb-1 text-sm font-medium">{p.name}</h3>
       </Link>
