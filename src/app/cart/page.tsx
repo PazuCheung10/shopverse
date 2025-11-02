@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type Item = { productId: string; quantity: number };
 
@@ -10,6 +11,7 @@ const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((r) => r
 
 export default function CartPage() {
   const [items, setItems] = useState<Item[]>([]);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadCart = () => {
@@ -73,7 +75,56 @@ export default function CartPage() {
             {items.map((i) => {
               const p = products.find((p) => p.id === i.productId);
               return (
-                <li key={i.productId} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4 hover:bg-white/10 hover:border-cyan-500/20 transition-all">
+                <li key={i.productId} className="flex items-center gap-4 rounded-lg border border-white/10 bg-white/5 p-4 hover:bg-white/10 hover:border-cyan-500/20 transition-all">
+                  {/* Product image */}
+                  <div className="relative w-16 h-16 flex-shrink-0 rounded border border-white/10 overflow-hidden">
+                    {!p ? (
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 flex items-center justify-center">
+                        <svg
+                          className="w-8 h-8 text-slate-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    ) : imageErrors.has(i.productId) ? (
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 flex items-center justify-center">
+                        <svg
+                          className="w-8 h-8 text-slate-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    ) : (
+                      <Image
+                        src={p.imageUrl}
+                        alt={p.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                        onError={() => {
+                          setImageErrors((prev) => new Set(prev).add(i.productId));
+                        }}
+                      />
+                    )}
+                  </div>
                   <div className="flex-1">
                     <div className="font-medium">{p?.name ?? 'Loading...'}</div>
                     <div className="flex items-center gap-2 mt-2">
