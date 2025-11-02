@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "test": "vitest",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -36,10 +37,15 @@
     "postcss": "^8.4.32",
     "eslint": "^8.55.0",
     "eslint-config-next": "^14.2.0",
+    "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.1.0",
     "vitest": "^1.0.0",
     "@testing-library/react": "^14.1.0",
     "@testing-library/jest-dom": "^6.1.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "@vitest/ui": "^1.0.0",
+    "jsdom": "^23.0.0",
+    "vite": "^5.0.0",
     "tsx": "^4.7.0"
   }
 }

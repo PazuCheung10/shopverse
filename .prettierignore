@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+build
+coverage
+*.lock
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+.env*
+!.env.example
+prisma/migrations
+
