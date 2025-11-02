@@ -108,7 +108,8 @@ export async function POST(req: Request) {
         ...(itemsForDb.length ? [prisma.orderItem.createMany({ data: itemsForDb })] : []),
       ]);
 
-      console.log('🧾 Order upserted:', order.id, order.status);
+      const finalOrder = await prisma.order.findUnique({ where: { id: order.id } });
+      console.log('🧾 Order upserted:', order.id, finalOrder?.status || 'PAID');
       console.log(`   📦 ${itemsForDb.length} OrderItems persisted`);
     } catch (error) {
       console.error('❌ Failed to process order:', error);
