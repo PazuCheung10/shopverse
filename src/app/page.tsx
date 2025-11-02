@@ -3,6 +3,7 @@ import ProductCard from '@/components/ProductCard';
 import EmptyState from '@/components/EmptyState';
 import Pagination from '@/components/Pagination';
 import SearchBar from '@/components/SearchBar';
+import ProductGridSkeleton from '@/components/ProductGridSkeleton';
 import { Suspense } from 'react';
 
 export const revalidate = 60;
@@ -60,8 +61,8 @@ async function ProductGrid({ page = 1, searchQuery }: { page: number; searchQuer
   return (
     <>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((p) => (
-          <ProductCard key={p.id} p={p} />
+        {products.map((p, index) => (
+          <ProductCard key={p.id} p={p} index={index} />
         ))}
       </div>
       <Pagination
@@ -82,7 +83,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <>
       <SearchBar />
-      <Suspense fallback={<div className="text-center text-slate-400">Loading products...</div>}>
+      <Suspense fallback={<ProductGridSkeleton />}>
         <ProductGrid page={page} searchQuery={searchQuery} />
       </Suspense>
     </>

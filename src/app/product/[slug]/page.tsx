@@ -2,7 +2,9 @@ import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import Price from '@/components/Price';
 import AddToCart from '@/components/AddToCart';
+import ProductDetailSkeleton from '@/components/ProductDetailSkeleton';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
 export async function generateStaticParams() {
   const slugs = await prisma.product.findMany({
@@ -19,8 +21,7 @@ interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { slug } = await params;
+async function ProductContent({ slug }: { slug: string }) {
   const p = await prisma.product.findUnique({ where: { slug } });
 
   if (!p || !p.active) return notFound();
@@ -45,5 +46,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <AddToCart productId={p.id} />
       </div>
     </div>
+  );
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { slug } = await params;
+
+  return (
+    <Suspense fallback={<ProductDetailSkeleton />}>
+      <ProductContent slug={slug} />
+    </Suspense>
   );
 }

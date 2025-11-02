@@ -10,19 +10,26 @@ export default function Navbar() {
     const updateCount = () => {
       const raw = localStorage.getItem('shopverse:cart');
       if (raw) {
-        const items = JSON.parse(raw) as { productId: string; quantity: number }[];
-        setCount(items.reduce((s, i) => s + i.quantity, 0));
+        try {
+          const items = JSON.parse(raw) as { productId: string; quantity: number }[];
+          setCount(items.reduce((s, i) => s + i.quantity, 0));
+        } catch {
+          setCount(0);
+        }
       } else {
         setCount(0);
       }
     };
 
+    // Initial load
     updateCount();
 
+    // Listen for storage events (cross-tab changes)
     const onStorage = () => {
       updateCount();
     };
 
+    // Listen for custom cartUpdated events (same-tab changes)
     const onCartUpdated = () => {
       updateCount();
     };
