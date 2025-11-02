@@ -31,7 +31,7 @@ pnpm install
 #### Environment Variables at a Glance
 
 | Name | Required | Where Used | Notes |
-|---|---|---|---|
+|------|:--------:|------------|-------|
 | `DATABASE_URL` | ✅ | Prisma | Postgres connection string |
 | `STRIPE_SECRET_KEY` | ✅ | Server | Starts with `sk_test_`/`sk_live_` |
 | `STRIPE_WEBHOOK_SECRET` | ✅ | Server webhook | From Stripe CLI/Webhooks (`whsec_…`) |
