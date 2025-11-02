@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getCart, updateQty, removeItem, total } from '@/lib/cart';
 import { routes } from '@/lib/routes';
 import Price from './Price';
@@ -71,25 +72,69 @@ export default function CartSheet({ isOpen, onClose }: CartSheetProps) {
 
   const currency = cartItems.length > 0 && products.size > 0 ? Array.from(products.values())[0]?.currency || 'usd' : 'usd';
 
-  if (!isOpen) return null;
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Handle ESC key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={reducedMotion ? {} : { opacity: 0 }}
+            animate={reducedMotion ? {} : { opacity: 1 }}
+            exit={reducedMotion ? {} : { opacity: 0 }}
+            transition={reducedMotion ? {} : { duration: 0.2 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            onClick={onClose}
+            aria-hidden="true"
+          />
 
-      {/* Sheet */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-slate-900 z-50 shadow-xl flex flex-col">
+          {/* Sheet */}
+          <motion.div
+            initial={reducedMotion ? {} : { x: '100%' }}
+            animate={reducedMotion ? {} : { x: 0 }}
+            exit={reducedMotion ? {} : { x: '100%' }}
+            transition={
+              reducedMotion
+                ? {}
+                : {
+                    type: 'spring',
+                    damping: 30,
+                    stiffness: 300,
+                  }
+            }
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-slate-900 z-50 shadow-xl flex flex-col"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cart-title"
+          >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
-          <h2 className="text-2xl font-bold text-cyan-300">Cart</h2>
+          <h2 id="cart-title" className="text-2xl font-bold text-cyan-300">
+            Cart
+          </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded p-1"
             aria-label="Close cart"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,8 +187,9 @@ export default function CartSheet({ isOpen, onClose }: CartSheetProps) {
                         </label>
                         <button
                           onClick={() => handleQtyChange(item.productId, item.quantity - 1)}
-                          className="w-8 h-8 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                          aria-label="Decrease quantity"
+                          disabled={item.quantity <= 1}
+                          className="w-8 h-8 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                          aria-label={`Decrease quantity of ${product.name}`}
                         >
                           -
                         </button>
@@ -158,15 +204,16 @@ export default function CartSheet({ isOpen, onClose }: CartSheetProps) {
                         />
                         <button
                           onClick={() => handleQtyChange(item.productId, item.quantity + 1)}
-                          className="w-8 h-8 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                          aria-label="Increase quantity"
+                          disabled={item.quantity >= 10}
+                          className="w-8 h-8 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                          aria-label={`Increase quantity of ${product.name}`}
                         >
                           +
                         </button>
                         <button
                           onClick={() => handleRemove(item.productId)}
-                          className="ml-auto text-red-400 hover:text-red-300"
-                          aria-label="Remove item"
+                          className="ml-auto text-red-400 hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded p-1"
+                          aria-label={`Remove ${product.name} from cart`}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -196,13 +243,15 @@ export default function CartSheet({ isOpen, onClose }: CartSheetProps) {
             <Link
               href={routes.checkout}
               onClick={onClose}
-              className="block w-full px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 text-center transition-colors"
+              className="block w-full px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 active:bg-cyan-500 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
             >
               Go to Checkout
             </Link>
           </div>
         )}
-      </div>
+      </motion.div>
     </>
+      )}
+    </AnimatePresence>
   );
 }

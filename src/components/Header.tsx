@@ -43,14 +43,14 @@ export default function Header() {
           <nav className="flex items-center gap-4">
             <Link
               href={routes.home}
-              className="text-slate-300 hover:text-white transition-colors"
+              className="text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded px-2 py-1"
             >
               Products
             </Link>
             <button
               onClick={() => setCartOpen(true)}
-              className="relative text-slate-300 hover:text-white transition-colors"
-              aria-label="Open cart"
+              className="relative text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded p-1"
+              aria-label={`Open cart${cartCount > 0 ? ` with ${cartCount} item${cartCount === 1 ? '' : 's'}` : ''}`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

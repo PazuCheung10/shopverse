@@ -40,8 +40,25 @@ export default function AddressForm({
     onValidityChange?.(isValid);
   }, [isValid, onValidityChange]);
 
+  const hasErrors = Object.keys(errors).length > 0;
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      {/* Live region for form errors */}
+      {hasErrors && (
+        <div
+          role="alert"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        >
+          {Object.entries(errors).map(([field, error]) => (
+            <span key={field}>
+              {field}: {error?.message || 'Invalid'}
+            </span>
+          ))}
+        </div>
+      )}
       {/* Email */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
@@ -51,11 +68,13 @@ export default function AddressForm({
           id="email"
           type="email"
           {...register('email')}
-          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 focus:border-transparent"
           placeholder="your@email.com"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
+          <p className="mt-1 text-sm text-red-400" role="alert" aria-live="polite">
+            {errors.email.message}
+          </p>
         )}
       </div>
 
@@ -68,7 +87,7 @@ export default function AddressForm({
           id="name"
           type="text"
           {...register('name')}
-          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 focus:border-transparent"
           placeholder="John Doe"
         />
         {errors.name && (
@@ -85,7 +104,7 @@ export default function AddressForm({
           id="addressLine1"
           type="text"
           {...register('addressLine1')}
-          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 focus:border-transparent"
           placeholder="123 Main St"
         />
         {errors.addressLine1 && (
@@ -102,7 +121,7 @@ export default function AddressForm({
           id="addressLine2"
           type="text"
           {...register('addressLine2')}
-          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 focus:border-transparent"
           placeholder="Apt, Suite, etc."
         />
         {errors.addressLine2 && (
@@ -119,7 +138,7 @@ export default function AddressForm({
           id="city"
           type="text"
           {...register('city')}
-          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 focus:border-transparent"
           placeholder="New York"
         />
         {errors.city && (
@@ -136,7 +155,7 @@ export default function AddressForm({
           id="state"
           type="text"
           {...register('state')}
-          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 focus:border-transparent"
           placeholder="NY"
         />
         {errors.state && (
@@ -153,7 +172,7 @@ export default function AddressForm({
           id="postalCode"
           type="text"
           {...register('postalCode')}
-          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          className="w-full px-4 py-2 bg-white/10 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 focus:border-transparent"
           placeholder="10001"
         />
         {errors.postalCode && (
