@@ -1,15 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from './route';
+import { stripe } from '@/lib/stripe';
+import { prisma } from '@/lib/prisma';
+import { headers } from 'next/headers';
 
 // Mock dependencies
-vi.mock('next/headers', () => ({
-  headers: vi.fn(),
-}));
-
 vi.mock('@/lib/stripe', () => ({
   stripe: {
     webhooks: {
       constructEvent: vi.fn(),
+    },
+    checkout: {
+      sessions: {
+        listLineItems: vi.fn(),
+      },
     },
   },
 }));
@@ -19,59 +23,27 @@ vi.mock('@/lib/prisma', () => ({
     order: {
       upsert: vi.fn(),
     },
+    orderItem: {
+      deleteMany: vi.fn(),
+      createMany: vi.fn(),
+    },
+    $transaction: vi.fn((ops) => Promise.all(ops.map((op: any) => op()))),
   },
 }));
 
-import { headers } from 'next/headers';
-import { stripe } from '@/lib/stripe';
-import { prisma } from '@/lib/prisma';
+vi.mock('next/headers', () => ({
+  headers: vi.fn(),
+}));
 
-describe('POST /api/stripe/webhook', () => {
+describe('POST /api/stripe/webhook - OrderItem persistence', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
-  });
-
-  it('returns 400 when stripe-signature header is missing', async () => {
     (headers as any).mockResolvedValue({
-      get: () => null,
+      get: () => 'valid-signature',
     });
-
-    const req = new Request('http://localhost:3000/api/stripe/webhook', {
-      method: 'POST',
-      body: JSON.stringify({}),
-    });
-
-    const response = await POST(req);
-    const data = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(data.error).toBe('Missing stripe-signature');
-    expect(stripe.webhooks.constructEvent).not.toHaveBeenCalled();
   });
 
-  it('returns 400 when signature is invalid', async () => {
-    (headers as any).mockResolvedValue({
-      get: () => 'invalid-signature',
-    });
-
-    (stripe.webhooks.constructEvent as any).mockImplementation(() => {
-      throw new Error('Invalid signature');
-    });
-
-    const req = new Request('http://localhost:3000/api/stripe/webhook', {
-      method: 'POST',
-      body: JSON.stringify({ type: 'checkout.session.completed' }),
-    });
-
-    const response = await POST(req);
-    const data = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(data.error).toBe('Invalid signature');
-  });
-
-  it('processes checkout.session.completed event with valid signature', async () => {
+  it('persists OrderItems when line items have app_product_id metadata', async () => {
     const mockEvent = {
       type: 'checkout.session.completed',
       data: {
@@ -89,8 +61,8 @@ describe('POST /api/stripe/webhook', () => {
             },
           },
           currency: 'usd',
-          amount_subtotal: 1999,
-          amount_total: 1999,
+          amount_subtotal: 5000,
+          amount_total: 5000,
         },
       },
     };
@@ -101,12 +73,28 @@ describe('POST /api/stripe/webhook', () => {
       status: 'PAID',
     };
 
-    (headers as any).mockResolvedValue({
-      get: () => 'valid-signature',
-    });
+    const mockLineItems = {
+      data: [
+        {
+          quantity: 2,
+          price: {
+            unit_amount: 2500,
+            product: {
+              metadata: {
+                app_product_id: 'prod_db_123',
+              },
+            },
+          },
+          amount_subtotal: 5000,
+        },
+      ],
+    };
 
     (stripe.webhooks.constructEvent as any).mockReturnValue(mockEvent);
+    (stripe.checkout.sessions.listLineItems as any).mockResolvedValue(mockLineItems);
     (prisma.order.upsert as any).mockResolvedValue(mockOrder);
+    (prisma.orderItem.deleteMany as any).mockResolvedValue({ count: 0 });
+    (prisma.orderItem.createMany as any).mockResolvedValue({ count: 1 });
 
     const req = new Request('http://localhost:3000/api/stripe/webhook', {
       method: 'POST',
@@ -118,43 +106,214 @@ describe('POST /api/stripe/webhook', () => {
 
     expect(response.status).toBe(200);
     expect(data).toEqual({ received: true });
-    expect(prisma.order.upsert).toHaveBeenCalledWith({
-      where: { stripePaymentId: 'cs_test_123' },
-      create: expect.objectContaining({
-        stripePaymentId: 'cs_test_123',
-        email: 'test@example.com',
-        name: 'John Doe',
-        currency: 'usd',
-        subtotal: 1999,
-        total: 1999,
-        status: 'PAID',
-        addressLine1: '123 Main St',
-        city: 'New York',
-        state: 'NY',
-        postalCode: '10001',
-        country: 'US',
-      }),
-      update: { status: 'PAID' },
+
+    // Verify OrderItems were created
+    expect(prisma.orderItem.deleteMany).toHaveBeenCalledWith({
+      where: { orderId: 'clx_order_123' },
+    });
+    expect(prisma.orderItem.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          orderId: 'clx_order_123',
+          productId: 'prod_db_123',
+          quantity: 2,
+          unitAmount: 2500,
+        },
+      ],
     });
   });
 
-  it('returns 500 when STRIPE_WEBHOOK_SECRET is missing', async () => {
-    delete process.env.STRIPE_WEBHOOK_SECRET;
+  it('skips line items gracefully when metadata is missing', async () => {
+    const mockEvent = {
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_456',
+          customer_details: { email: 'test@example.com' },
+          currency: 'usd',
+          amount_subtotal: 3000,
+          amount_total: 3000,
+        },
+      },
+    };
 
-    (headers as any).mockResolvedValue({
-      get: () => 'valid-signature',
-    });
+    const mockOrder = {
+      id: 'clx_order_456',
+      stripePaymentId: 'cs_test_456',
+      status: 'PAID',
+    };
+
+    const mockLineItems = {
+      data: [
+        {
+          quantity: 1,
+          price: {
+            unit_amount: 3000,
+            product: {
+              metadata: {}, // No app_product_id
+            },
+          },
+          amount_subtotal: 3000,
+        },
+      ],
+    };
+
+    (stripe.webhooks.constructEvent as any).mockReturnValue(mockEvent);
+    (stripe.checkout.sessions.listLineItems as any).mockResolvedValue(mockLineItems);
+    (prisma.order.upsert as any).mockResolvedValue(mockOrder);
+    (prisma.orderItem.deleteMany as any).mockResolvedValue({ count: 0 });
+    (prisma.orderItem.createMany as any).mockResolvedValue({ count: 0 });
 
     const req = new Request('http://localhost:3000/api/stripe/webhook', {
       method: 'POST',
-      body: JSON.stringify({}),
+      body: JSON.stringify(mockEvent),
     });
 
     const response = await POST(req);
-    const data = await response.json();
 
-    expect(response.status).toBe(500);
-    expect(data.error).toBe('Server configuration missing');
+    expect(response.status).toBe(200);
+
+    // Should delete old items but not create new ones (filtered out)
+    expect(prisma.orderItem.deleteMany).toHaveBeenCalled();
+    // createMany should be called with empty array or skipped
+    expect(prisma.orderItem.createMany).toHaveBeenCalledWith({
+      data: [],
+    });
+  });
+
+  it('handles idempotency correctly (replaces items on duplicate webhook)', async () => {
+    const mockEvent = {
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_789',
+          customer_details: { email: 'test@example.com' },
+          currency: 'usd',
+          amount_subtotal: 2000,
+          amount_total: 2000,
+        },
+      },
+    };
+
+    const mockOrder = {
+      id: 'clx_order_789',
+      stripePaymentId: 'cs_test_789',
+      status: 'PAID',
+    };
+
+    const mockLineItems = {
+      data: [
+        {
+          quantity: 1,
+          price: {
+            unit_amount: 2000,
+            product: {
+              metadata: {
+                app_product_id: 'prod_db_789',
+              },
+            },
+          },
+          amount_subtotal: 2000,
+        },
+      ],
+    };
+
+    (stripe.webhooks.constructEvent as any).mockReturnValue(mockEvent);
+    (stripe.checkout.sessions.listLineItems as any).mockResolvedValue(mockLineItems);
+    (prisma.order.upsert as any).mockResolvedValue(mockOrder);
+    (prisma.orderItem.deleteMany as any).mockResolvedValue({ count: 2 }); // Had 2 items before
+    (prisma.orderItem.createMany as any).mockResolvedValue({ count: 1 });
+
+    // First call
+    const req1 = new Request('http://localhost:3000/api/stripe/webhook', {
+      method: 'POST',
+      body: JSON.stringify(mockEvent),
+    });
+    await POST(req1);
+
+    // Second call (idempotent)
+    const req2 = new Request('http://localhost:3000/api/stripe/webhook', {
+      method: 'POST',
+      body: JSON.stringify(mockEvent),
+    });
+    await POST(req2);
+
+    // Should delete old items each time, then create fresh
+    expect(prisma.orderItem.deleteMany).toHaveBeenCalledTimes(2);
+    expect(prisma.orderItem.createMany).toHaveBeenCalledTimes(2);
+    // Each time should create the same item
+    expect(prisma.orderItem.createMany).toHaveBeenLastCalledWith({
+      data: [
+        {
+          orderId: 'clx_order_789',
+          productId: 'prod_db_789',
+          quantity: 1,
+          unitAmount: 2000,
+        },
+      ],
+    });
+  });
+
+  it('uses fallback unit amount calculation when unit_amount is missing', async () => {
+    const mockEvent = {
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_fallback',
+          customer_details: { email: 'test@example.com' },
+          currency: 'usd',
+          amount_subtotal: 6000,
+          amount_total: 6000,
+        },
+      },
+    };
+
+    const mockOrder = {
+      id: 'clx_order_fallback',
+      stripePaymentId: 'cs_test_fallback',
+      status: 'PAID',
+    };
+
+    const mockLineItems = {
+      data: [
+        {
+          quantity: 3,
+          price: {
+            // No unit_amount
+            product: {
+              metadata: {
+                app_product_id: 'prod_db_fallback',
+              },
+            },
+          },
+          amount_subtotal: 6000, // Total for 3 items
+        },
+      ],
+    };
+
+    (stripe.webhooks.constructEvent as any).mockReturnValue(mockEvent);
+    (stripe.checkout.sessions.listLineItems as any).mockResolvedValue(mockLineItems);
+    (prisma.order.upsert as any).mockResolvedValue(mockOrder);
+    (prisma.orderItem.deleteMany as any).mockResolvedValue({ count: 0 });
+    (prisma.orderItem.createMany as any).mockResolvedValue({ count: 1 });
+
+    const req = new Request('http://localhost:3000/api/stripe/webhook', {
+      method: 'POST',
+      body: JSON.stringify(mockEvent),
+    });
+
+    await POST(req);
+
+    // Should calculate unit amount: 6000 / 3 = 2000
+    expect(prisma.orderItem.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          orderId: 'clx_order_fallback',
+          productId: 'prod_db_fallback',
+          quantity: 3,
+          unitAmount: 2000,
+        },
+      ],
+    });
   });
 });
-

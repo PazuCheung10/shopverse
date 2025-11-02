@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 async function findOrderWithPolling(sessionId: string) {
-  // Try to find order immediately
+  // Try to find order immediately (with items from DB)
   let order = await prisma.order.findUnique({
     where: { stripePaymentId: sessionId },
     include: {
@@ -19,8 +19,9 @@ async function findOrderWithPolling(sessionId: string) {
     },
   });
 
-  // If not found, poll up to 6 times (3 seconds max)
-  if (!order) {
+  // If not found or items not yet persisted, poll up to 6 times (3 seconds max)
+  // Prefer DB items - faster than Stripe API calls
+  if (!order || order.items.length === 0) {
     for (let i = 0; i < 6; i++) {
       await new Promise((resolve) => setTimeout(resolve, 500));
       order = await prisma.order.findUnique({
@@ -33,7 +34,8 @@ async function findOrderWithPolling(sessionId: string) {
           },
         },
       });
-      if (order) break;
+      // Stop polling once we have order with items
+      if (order && order.items.length > 0) break;
     }
   }
 

@@ -47,6 +47,7 @@ export async function POST(req: Request) {
     const s = event.data.object as any;
 
     try {
+      // 1) Upsert the Order row first (idempotent by stripePaymentId)
       const order = await prisma.order.upsert({
         where: { stripePaymentId: s.id },
         create: {
@@ -65,11 +66,52 @@ export async function POST(req: Request) {
           country: s.customer_details?.address?.country ?? undefined,
         },
         update: { status: 'PAID' },
+        select: { id: true },
       });
 
+      // 2) Fetch Stripe line items with expanded product metadata
+      const lineItems = await stripe.checkout.sessions.listLineItems(s.id, {
+        expand: ['data.price.product'],
+        limit: 100,
+      });
+
+      // 3) Map line items → our DB productIds via product metadata
+      const itemsForDb = lineItems.data
+        .map((li: any) => {
+          const productMeta = li.price?.product?.metadata ?? {};
+          const appProductId = productMeta.app_product_id as string | undefined;
+          if (!appProductId) return null; // skip if metadata missing
+          const qty = li.quantity ?? 1;
+          // Prefer Stripe-reported unit amount if available; fall back to per-unit by subtotal / qty
+          const unitAmount =
+            typeof li.price?.unit_amount === 'number'
+              ? li.price.unit_amount
+              : Math.round((li.amount_subtotal ?? 0) / Math.max(qty, 1));
+
+          return {
+            orderId: order.id,
+            productId: appProductId,
+            quantity: qty,
+            unitAmount, // minor units
+          };
+        })
+        .filter(Boolean) as {
+          orderId: string;
+          productId: string;
+          quantity: number;
+          unitAmount: number;
+        }[];
+
+      // 4) Replace items atomically (idempotent)
+      await prisma.$transaction([
+        prisma.orderItem.deleteMany({ where: { orderId: order.id } }),
+        ...(itemsForDb.length ? [prisma.orderItem.createMany({ data: itemsForDb })] : []),
+      ]);
+
       console.log('🧾 Order upserted:', order.id, order.status);
+      console.log(`   📦 ${itemsForDb.length} OrderItems persisted`);
     } catch (error) {
-      console.error('❌ Failed to upsert order:', error);
+      console.error('❌ Failed to process order:', error);
       // Return 500 so Stripe will retry
       return NextResponse.json(
         { error: 'Failed to process order' },

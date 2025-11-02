@@ -170,6 +170,19 @@ if [[ "$PROVIDER" == "postgresql" ]]; then
 
     psql "$DATABASE_URL" -c "select locktype, mode, granted from pg_locks l join pg_database d on l.database=d.oid where d.datname=current_database();" 2>&1 || true
 
+    # Check OrderItems for PAID orders
+    say "OrderItems validation"
+    PAID_ORDERS_WITHOUT_ITEMS=$(psql "$DATABASE_URL" -t -c "select count(*) from \"Order\" o left join \"OrderItem\" oi on o.id=oi.\"orderId\" where o.status='PAID' and oi.id is null;" 2>/dev/null | tr -d ' ' || echo "0")
+    if [[ "$PAID_ORDERS_WITHOUT_ITEMS" == "0" || -z "$PAID_ORDERS_WITHOUT_ITEMS" ]]; then
+      ok "All PAID orders have OrderItems (or no PAID orders exist)"
+    else
+      warn "Found $PAID_ORDERS_WITHOUT_ITEMS PAID order(s) without OrderItems (webhook may need retry)"
+    fi
+
+    TOTAL_ORDER_ITEMS=$(psql "$DATABASE_URL" -t -c "select count(*) from \"OrderItem\";" 2>/dev/null | tr -d ' ' || echo "0")
+    if [[ -n "$TOTAL_ORDER_ITEMS" && "$TOTAL_ORDER_ITEMS" != "0" ]]; then
+      ok "Total OrderItems in DB: $TOTAL_ORDER_ITEMS"
+    fi
   fi
 
 fi

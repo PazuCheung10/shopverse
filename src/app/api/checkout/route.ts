@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
           product_data: {
             name: p.name,
             images: [p.imageUrl],
+            // Crucial: let webhook map Stripe line item back to our DB product
+            metadata: { app_product_id: p.id },
           },
         },
         quantity: i.quantity,

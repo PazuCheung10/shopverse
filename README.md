@@ -80,7 +80,7 @@ Expect: `ready - started server on http://localhost:3001`
    - `/product/[slug]` – Product detail page with Add to Cart button
    - `/cart` – Shopping cart with quantity controls and server-priced subtotal
    - `/checkout` – Address form (RHF + Zod validation) → Stripe Checkout redirect
-   - `/success` – Full order receipt with masked email/address (webhook-aware polling)
+   - `/success` – Full order receipt with masked email/address (uses DB OrderItems, faster than Stripe API)
    - `/cancel` – Payment canceled (cart preserved)
 
 **Auth/Admin**: Not included by design (portfolio scope). Products are seeded. Enable an admin panel later if needed (see "Enhancements").
@@ -104,7 +104,7 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 - **Shopping Cart**: Client-side cart with localStorage persistence and server-validated pricing
 - **Toast Notifications**: Accessible toast system with auto-dismiss and hover pause
 - **Stripe Checkout**: Secure payment processing with Stripe Checkout Sessions
-- **Order Management**: Webhook-based order persistence with full receipt display (polling for race conditions)
+- **Order Management**: Webhook-based order persistence with OrderItems stored in DB (faster receipts, complete order history)
 - **Promo Codes** (optional): Enable with `NEXT_PUBLIC_ENABLE_PROMO_CODES=true` to allow discount coupons
 - **Responsive Design**: Mobile-friendly UI with Tailwind CSS dark theme
 
@@ -121,7 +121,8 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
   - Returns: `{ id, url }` (redirect to `url`)
 
 - `POST /api/stripe/webhook` – Stripe webhook handler
-  - Verifies signature and persists orders on `checkout.session.completed`
+  - Verifies signature and persists orders + OrderItems on `checkout.session.completed`
+  - Maps Stripe line items to DB products via `app_product_id` metadata
   - Returns: `{ received: true }` on success
 
 - `GET /api/orders/[id]` – Fetch order details
