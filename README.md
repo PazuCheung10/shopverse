@@ -109,6 +109,19 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 - **Promo Codes** (optional): Enable with `NEXT_PUBLIC_ENABLE_PROMO_CODES=true` to allow discount coupons
 - **Responsive Design**: Mobile-friendly UI with Tailwind CSS dark theme
 
+## Rate Limiting
+
+The `/api/checkout` endpoint uses in-memory rate limiting:
+- **Limit**: 10 requests per minute per client (sliding window)
+- **Identification**: Client IP address (from `x-forwarded-for` or `x-real-ip` headers)
+- **Response**: Returns `429 Too Many Requests` with `RATE_LIMIT_EXCEEDED` error code
+- **Headers**: Includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After`
+
+**Note**: On serverless platforms (Vercel, etc.), in-memory rate limits reset between cold starts. This is acceptable for demo/portfolio purposes. For production scale, consider:
+- Persistent store (Redis, database)
+- Vercel Edge Config
+- External rate limiting service (Cloudflare, etc.)
+
 ## API Endpoints
 
 - `GET /api/products` – Products API

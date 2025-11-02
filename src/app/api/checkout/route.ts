@@ -3,8 +3,34 @@ import { stripe } from '@/lib/stripe';
 import { CheckoutSchema } from '@/lib/validation';
 import { prisma } from '@/lib/prisma';
 import { env } from '@/lib/env';
+import { checkoutRateLimiter, getClientId } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+  // Rate limiting: check before processing
+  const clientId = getClientId(req);
+  const rateLimit = checkoutRateLimiter.check(clientId);
+
+  if (!rateLimit.allowed) {
+    const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      {
+        error: 'Rate limit exceeded',
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many checkout requests. Please try again later.',
+        retryAfter,
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfter),
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+        },
+      }
+    );
+  }
+
   try {
     const json = await req.json();
     const parsed = CheckoutSchema.safeParse(json);
@@ -58,7 +84,9 @@ export async function POST(req: NextRequest) {
     let discounts = undefined;
     if (parsed.data.promoCode && env.NEXT_PUBLIC_ENABLE_PROMO_CODES) {
       try {
-        const coupons = await stripe.coupons.list({ code: parsed.data.promoCode.toUpperCase(), limit: 1 });
+        // Note: Stripe TypeScript types don't include 'code' in CouponListParams,
+        // but the API supports it at runtime
+        const coupons = await stripe.coupons.list({ code: parsed.data.promoCode.toUpperCase(), limit: 1 } as any);
         if (coupons.data.length > 0 && coupons.data[0].valid && !coupons.data[0].deleted) {
           discounts = [{ coupon: coupons.data[0].id }];
         } else {
@@ -95,7 +123,16 @@ export async function POST(req: NextRequest) {
       { idempotencyKey: crypto.randomUUID() }
     );
 
-    return NextResponse.json({ id: session.id, url: session.url });
+    return NextResponse.json(
+      { id: session.id, url: session.url },
+      {
+        headers: {
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': String(rateLimit.remaining),
+          'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+        },
+      }
+    );
   } catch (error) {
     console.error('Checkout error:', error);
     
