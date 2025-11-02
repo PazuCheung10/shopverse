@@ -38,13 +38,14 @@ export async function POST(req: Request) {
     
     try {
       // Upsert order (idempotent on stripePaymentId)
+      // This ensures we don't create duplicate orders if webhook is retried
       await prisma.order.upsert({
         where: { stripePaymentId: session.id },
         create: {
           stripePaymentId: session.id,
           email: session.customer_details?.email ?? '',
-          name: session.customer_details?.name ?? '',
-          currency: session.currency,
+          name: session.customer_details?.name ?? undefined,
+          currency: session.currency ?? 'usd',
           subtotal: session.amount_subtotal ?? 0,
           total: session.amount_total ?? 0,
           status: 'PAID',
@@ -55,12 +56,20 @@ export async function POST(req: Request) {
           postalCode: session.customer_details?.address?.postal_code ?? undefined,
           country: session.customer_details?.address?.country ?? undefined,
         },
-        update: { status: 'PAID' },
+        update: { 
+          status: 'PAID',
+          // Update totals in case they changed (e.g., shipping adjustments)
+          subtotal: session.amount_subtotal ?? 0,
+          total: session.amount_total ?? 0,
+        },
       });
+      
+      console.log(`Order upserted: ${session.id} for ${session.customer_details?.email ?? 'unknown'}`);
     } catch (error) {
       console.error('Failed to upsert order:', error);
+      // Return 500 so Stripe will retry the webhook
       return NextResponse.json(
-        { error: 'Failed to process order' },
+        { error: 'Failed to process order', details: error instanceof Error ? error.message : 'Unknown error' },
         { status: 500 }
       );
     }

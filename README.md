@@ -35,10 +35,18 @@ npm run db:seed
 npm run dev
 ```
 
-6. For local webhook testing, run Stripe CLI in another terminal:
-```bash
-stripe listen --forward-to localhost:3000/api/stripe/webhook
-```
+6. For local webhook testing with Stripe CLI:
+   - First, authenticate (if not already done):
+     ```bash
+     stripe login
+     ```
+   - Then start the webhook listener in a separate terminal:
+     ```bash
+     stripe listen --forward-to localhost:3000/api/stripe/webhook
+     ```
+   - Copy the webhook signing secret (starts with `whsec_`) and add it to `.env.local` as `STRIPE_WEBHOOK_SECRET`
+   - The listener will forward all Stripe events to your local server
+   - Events will appear in the terminal for debugging
 
 7. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
