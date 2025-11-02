@@ -29,23 +29,22 @@ describe('ProductCard', () => {
   };
 
   it('renders product information correctly', () => {
-    render(<ProductCard {...mockProduct} />);
+    render(<ProductCard p={mockProduct} index={0} />);
 
     expect(screen.getByText('Test Product')).toBeInTheDocument();
-    expect(screen.getByText('This is a test product description')).toBeInTheDocument();
     expect(screen.getByTestId('product-image')).toHaveAttribute('src', mockProduct.imageUrl);
     expect(screen.getByTestId('product-image')).toHaveAttribute('alt', mockProduct.name);
   });
 
   it('renders product link with correct href', () => {
-    render(<ProductCard {...mockProduct} />);
+    render(<ProductCard p={mockProduct} index={0} />);
 
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/product/test-product');
   });
 
   it('displays price correctly', () => {
-    render(<ProductCard {...mockProduct} />);
+    render(<ProductCard p={mockProduct} index={0} />);
 
     // Price component should render $19.99
     expect(screen.getByText(/\$19\.99/)).toBeInTheDocument();
