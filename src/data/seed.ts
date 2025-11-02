@@ -8,7 +8,7 @@ async function main() {
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
 
-  // Create 12 demo products
+  // Create 24 demo products (for pagination testing)
   const products = await prisma.product.createMany({
     data: [
       {
@@ -117,6 +117,105 @@ async function main() {
         imageUrl: 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=1200&auto=format&fit=crop',
         currency: 'usd',
         unitAmount: 54900, // $549.00
+        active: true,
+      },
+      {
+        slug: 'neon-gaming-chair',
+        name: 'Neon Gaming Chair',
+        description: 'Ergonomic gaming chair with RGB lighting and lumbar support.',
+        imageUrl: 'https://images.unsplash.com/photo-1549497538-303791108f95?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 29900, // $299.00
+        active: true,
+      },
+      {
+        slug: 'vortex-webcam',
+        name: 'Vortex Webcam',
+        description: '4K webcam with auto-focus and noise cancellation.',
+        imageUrl: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 12900, // $129.00
+        active: true,
+      },
+      {
+        slug: 'stellar-lightning-cable',
+        name: 'Stellar Lightning Cable',
+        description: 'Premium USB-C to Lightning cable with fast charging.',
+        imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 2900, // $29.00
+        active: true,
+      },
+      {
+        slug: 'cosmic-power-bank',
+        name: 'Cosmic Power Bank',
+        description: '20,000mAh portable charger with wireless charging.',
+        imageUrl: 'https://images.unsplash.com/photo-1609091839311-d5365f99e65a?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 4900, // $49.00
+        active: true,
+      },
+      {
+        slug: 'nebula-smart-bulb',
+        name: 'Nebula Smart Bulb',
+        description: 'WiFi-enabled RGB smart bulb with app control.',
+        imageUrl: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 2400, // $24.00
+        active: true,
+      },
+      {
+        slug: 'quantum-headphone-stand',
+        name: 'Quantum Headphone Stand',
+        description: 'Premium aluminum stand with USB charging port.',
+        imageUrl: 'https://images.unsplash.com/photo-1599669454699-248893623440?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 3900, // $39.00
+        active: true,
+      },
+      {
+        slug: 'stellar-usb-hub',
+        name: 'Stellar USB Hub',
+        description: '7-port USB 3.0 hub with fast data transfer.',
+        imageUrl: 'https://images.unsplash.com/photo-1625842268584-8f3296236761?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 3500, // $35.00
+        active: true,
+      },
+      {
+        slug: 'cosmic-dock-station',
+        name: 'Cosmic Dock Station',
+        description: 'Thunderbolt 3 docking station with dual 4K display support.',
+        imageUrl: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 19900, // $199.00
+        active: true,
+      },
+      {
+        slug: 'lunar-cable-manager',
+        name: 'Lunar Cable Manager',
+        description: 'Under-desk cable management system for clean workspace.',
+        imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 1800, // $18.00
+        active: true,
+      },
+      {
+        slug: 'solar-wireless-charger',
+        name: 'Solar Wireless Charger',
+        description: '15W fast wireless charging pad with LED indicator.',
+        imageUrl: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 3200, // $32.00
+        active: true,
+      },
+      {
+        slug: 'aurora-blue-light-glasses',
+        name: 'Aurora Blue Light Glasses',
+        description: 'Stylish blue light blocking glasses for screen time.',
+        imageUrl: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=1200&auto=format&fit=crop',
+        currency: 'usd',
+        unitAmount: 8900, // $89.00
         active: true,
       },
     ],
