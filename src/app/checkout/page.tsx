@@ -435,7 +435,7 @@ export default function CheckoutPage() {
               )}
 
               {/* Total */}
-              <div className="flex justify-between text-base font-semibold pt-2 border-t border-white/10">
+              <div className="flex justify-between text-base font-semibold pt-2">
                 <span>Total</span>
                 <span className="text-cyan-300">
                   {products.length > 0 && items.length > 0 ? (
