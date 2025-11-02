@@ -84,13 +84,88 @@ Use these test cards in Stripe Checkout:
 - CVC: Any 3 digits
 - ZIP: Any 5 digits
 
+## Deployment (Vercel)
+
+### Prerequisites
+
+1. **Database**: Set up a production PostgreSQL database (Neon, Supabase, or PlanetScale)
+2. **Stripe Account**: Get your production Stripe API keys from [Stripe Dashboard](https://dashboard.stripe.com)
+
+### Environment Variables
+
+Add these environment variables in your Vercel project settings:
+
+**Required:**
+- `DATABASE_URL` - Your production PostgreSQL connection string
+- `STRIPE_SECRET_KEY` - Stripe secret key (starts with `sk_live_` for production)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key (starts with `pk_live_` for production)
+- `NEXT_PUBLIC_APP_URL` - Your production URL (e.g., `https://your-app.vercel.app`)
+- `STRIPE_WEBHOOK_SECRET` - Production webhook signing secret (see below)
+
+### Setting up Production Stripe Webhook
+
+1. Deploy your app to Vercel first (get the production URL)
+
+2. Create a webhook endpoint in Stripe Dashboard:
+   ```bash
+   # Using Stripe CLI (recommended for testing)
+   stripe listen --forward-to https://your-app.vercel.app/api/stripe/webhook
+   ```
+
+   Or in Stripe Dashboard:
+   - Go to [Webhooks](https://dashboard.stripe.com/webhooks)
+   - Click "Add endpoint"
+   - Endpoint URL: `https://your-app.vercel.app/api/stripe/webhook`
+   - Events to send: Select `checkout.session.completed`
+   - Copy the "Signing secret" (starts with `whsec_`)
+
+3. Add the webhook signing secret to Vercel:
+   - Variable name: `STRIPE_WEBHOOK_SECRET`
+   - Value: The `whsec_...` value from step 2
+   - Environment: Production (and Preview if desired)
+
+### Deploy
+
+1. Connect your GitHub repository to Vercel
+
+2. Vercel will automatically:
+   - Run `pnpm install`
+   - Run `pnpm db:generate` (via postinstall)
+   - Run `pnpm db:migrate:deploy` (via buildCommand)
+   - Run `pnpm build`
+
+3. Your app should be live at `https://your-app.vercel.app`
+
+### Verifying Deployment
+
+1. **Browse catalog**: Visit your production URL and verify products load
+2. **Test checkout**:
+   - Add items to cart
+   - Complete checkout with test card: `4242 4242 4242 4242`
+   - Verify redirect to success page
+3. **Verify order in DB**:
+   ```bash
+   # Set DATABASE_URL to production DB
+   pnpm check:orders
+   ```
+   - Should show order with status `PAID`
+
+### Troubleshooting
+
+- **Migrations fail**: Ensure `DATABASE_URL` is correct and database exists
+- **Webhook not working**: 
+  - Verify `STRIPE_WEBHOOK_SECRET` is set correctly
+  - Check Stripe Dashboard → Webhooks → Recent events for delivery status
+  - Ensure production URL is accessible (not blocked by firewall)
+
 ## Scripts
 
 - `pnpm dev` - Start development server (port 3000)
 - `pnpm build` - Build for production
 - `pnpm start` - Start production server
 - `pnpm db:generate` - Generate Prisma client
-- `pnpm db:migrate` - Run database migrations
+- `pnpm db:migrate` - Run database migrations (development)
+- `pnpm db:migrate:deploy` - Run database migrations (production)
 - `pnpm db:seed` - Seed database with sample products
 - `pnpm db:studio` - Open Prisma Studio
 - `pnpm test` - Run tests
