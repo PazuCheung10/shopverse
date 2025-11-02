@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import { QueryProvider } from '@/lib/queryClient';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'WeatherFlow',
-  description: 'Minimal, elegant, city-first weather app',
+  title: 'ShopVerse',
+  description: 'Minimal, modern e-commerce demo',
 };
 
 export default function RootLayout({
@@ -14,9 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <QueryProvider>{children}</QueryProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
