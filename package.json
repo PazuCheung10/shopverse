@@ -16,6 +16,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:conditional": "sh scripts/migrate-if-db-exists.sh",
     "db:seed": "tsx src/data/seed.ts",
+    "db:seed:conditional": "tsx scripts/seed-if-empty.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },
