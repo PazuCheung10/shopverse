@@ -50,7 +50,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="site-header sticky top-0">
+    <header className="site-header top-0 z-[9999] isolate">
       <div className="border-b border-white/10 bg-slate-950/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link href="/" className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-cyan-500 bg-clip-text text-transparent hover:from-cyan-200 hover:to-cyan-400 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 rounded">
