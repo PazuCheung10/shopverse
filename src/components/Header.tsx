@@ -35,7 +35,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 isolate site-header">
+      <header className="sticky top-0 z-[9999] isolate site-header">
         <div className="bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <Link href={routes.home} className="text-2xl font-bold text-cyan-300 hover:text-cyan-200 transition-colors">

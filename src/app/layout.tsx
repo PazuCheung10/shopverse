@@ -75,6 +75,27 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* Detect Safari immediately (before React hydration) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var ua = navigator.userAgent;
+                  var isAppleWebKit = /AppleWebKit/.test(ua);
+                  var isChromeOrCriOS = /Chrome|CriOS/.test(ua);
+                  var isSafari = isAppleWebKit && !isChromeOrCriOS;
+                  if (isSafari) {
+                    document.documentElement.classList.add('safari');
+                    document.body.classList.add('safari-pad');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-dvh bg-slate-950 text-slate-100 antialiased">
         <SafariDetector />
         <ErrorBoundary>
