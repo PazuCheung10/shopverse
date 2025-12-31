@@ -41,8 +41,9 @@ pnpm-debug.log*
 next-env.d.ts
 
 # prisma
-prisma/migrations/*
-!prisma/migrations/.gitkeep
+# Allow migrations to be committed (needed for production deployments)
+# prisma/migrations/*
+# !prisma/migrations/.gitkeep
 
 # architecture (keep public version if needed)
 architecture.md
