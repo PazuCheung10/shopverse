@@ -230,7 +230,7 @@ The webhook handler persists complete order history:
 
 ## Project Structure
 
-See `architecture.md` for detailed architecture documentation.
+See `ARCHITECTURE.md` for detailed architecture documentation.
 
 Key directories:
 - `src/app/` – Next.js App Router pages and API routes
